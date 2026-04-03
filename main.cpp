@@ -123,6 +123,34 @@ Input read_input() {
     return in;
 }
 
+bool is_in_grid(const Input& in, const Vec2& pos) {
+    return 0 <= pos.x && pos.x < in.N && 0 <= pos.y && pos.y < in.N;
+}
+
+bool can_move(const Input& in, const State& state, const char dir) {
+    Vec2 head = state.snake_pos.front();
+    switch (dir) {
+        case ('U'):
+            head.x--;
+            break;
+        case ('D'):
+            head.x++;
+            break;
+        case ('L'):
+            head.y--;
+            break;
+        case ('R'):
+            head.y++;
+            break;
+    }
+
+    if (!is_in_grid(in, head)) return false;
+    for (const Vec2& body : state.snake_pos) {
+        if (head == body) return false;
+    }
+    return true;
+}
+
 State zigzag(const Input& in) {
     State state(in);
     State best_state = state;
@@ -141,6 +169,30 @@ State zigzag(const Input& in) {
         } else {
             for (int x = 0; x < in.N - 1; x++) state.move(in, 'D');
             if (state.game_score < best_state.game_score) best_state = state;
+        }
+    }
+
+    return best_state;
+}
+
+State bfs_all_route(const Input& in) {
+    array<char, 4> dir{'U', 'D', 'L', 'R'};
+
+    State best_state(in);
+
+    queue<State> q;
+    q.emplace(State(in));
+
+    while (!q.empty()) {
+        State state = q.front();
+        q.pop();
+
+        if (state.game_score < best_state.game_score) best_state = state;
+
+        for (const char d : dir) {
+            if (!can_move(in, state, d)) continue;
+            state.move(in, d);
+            q.emplace(state);
         }
     }
 
