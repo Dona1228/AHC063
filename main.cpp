@@ -66,7 +66,7 @@ public:
         for (int i = 0; i < ssize(snake_color); i++) {
             if (snake_color[i] != in.d[i]) error++;
         }
-        game_score = ssize(actions) + 10000 * error + 2 * (in.M - ssize(snake_pos));
+        game_score = ssize(actions) + 10000 * (error + 2 * (in.M - ssize(snake_color)));
     }
 
     void print_actions() {
