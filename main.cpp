@@ -57,9 +57,11 @@ public:
         for (int i = 0; i < 5; i++) snake_pos[i] = {5 - i - 1, 0};
         snake_color.resize(5);
         for (int i = 0; i < 5; i++) snake_color[i] = 1;
+
+        calc_game_score(in);
     }
 
-    void calc_score(const Input& in) {
+    void calc_game_score(const Input& in) {
         int error = 0;
         for (int i = 0; i < ssize(snake_color); i++) {
             if (snake_color[i] != in.d[i]) error++;
@@ -89,9 +91,33 @@ Input read_input() {
     return in;
 }
 
+State zigzag(const Input& in) {
+    State state(in);
+
+    for (int x = 4; x < in.N - 1; x++) {
+        state.actions.emplace_back('D');
+    }
+
+    for (int y = 1; y < in.N; y++) {
+        state.actions.emplace_back('R');
+        if (y % 2 == 1) {
+            for (int x = 0; x < in.N - 1; x++) state.actions.emplace_back('U');
+        } else {
+            for (int x = 0; x < in.N - 1; x++) state.actions.emplace_back('D');
+        }
+    }
+
+    return state;
+}
+
 int main() {
     constexpr int TIME_LIMIT = 1950;
     TimeKeeper time_keeper(TIME_LIMIT);
 
     const Input in = read_input();
+
+    State best_state = zigzag(in);
+    best_state.print_actions();
+
+    return 0;
 }
