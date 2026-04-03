@@ -96,11 +96,8 @@ public:
                 head.y++;
                 break;
         }
-
         if (!is_in_grid(in, head)) return false;
-        for (const Vec2& body : snake_pos) {
-            if (head == body) return false;
-        }
+        if (head == snake_pos[1]) return false;
         return true;
     }
 
@@ -131,7 +128,17 @@ public:
             board[head.x][head.y] = 0;
         }
 
-        // 噛みちぎり（未実装）
+        // 噛みちぎり
+        for (int i = 1; i < ssize(snake_pos); i++) {
+            if (head == snake_pos[i]) {
+                for (int j = i + 1; j < ssize(snake_pos); j++) {
+                    board[snake_pos[j].x][snake_pos[j].y] = snake_color[j];
+                }
+                snake_color.erase(snake_color.begin() + i + 1, snake_color.end());
+                snake_pos.erase(snake_pos.begin() + i + 1, snake_pos.end());
+                break;
+            }
+        }
 
         // 状態の更新
         actions.emplace_back(dir);
@@ -206,7 +213,7 @@ int main() {
 
     const Input in = read_input();
 
-    State best_state = bfs_all_route(in);
+    State best_state = zigzag(in);
     best_state.print_actions();
 
     return 0;
