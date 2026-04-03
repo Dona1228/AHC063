@@ -207,13 +207,100 @@ State bfs_all_route(const Input& in) {
     return best_state;
 }
 
+State greedy(const Input& in) {
+    const array<char, 4> dir{'U', 'D', 'L', 'R'};
+
+    State state(in);
+
+    for (int t = 0; ssize(state.snake_color) < in.M; t++) {
+        int target_color = in.d[ssize(state.snake_color)];
+        const Vec2& start_pos = state.snake_pos.front();
+        Vec2 target_pos = {-1, -1};
+
+        vector<vector<int>> dist(in.N, vector<int>(in.N, -1));
+        dist[start_pos.x][start_pos.y] = 0;
+
+        queue<Vec2> q;
+        q.emplace(start_pos);
+
+        while (!q.empty()) {
+            const Vec2 curr_pos = q.front();
+            q.pop();
+
+            if (state.board[curr_pos.x][curr_pos.y] == target_color) {
+                target_pos = curr_pos;
+                break;
+            }
+        
+            for (const char d : dir) {
+                Vec2 next_pos = curr_pos;
+                switch(d) {
+                    case ('U'):
+                        next_pos.x--;
+                        break;
+                    case ('D'):
+                        next_pos.x++;
+                        break;
+                    case ('L'):
+                        next_pos.y--;
+                        break;
+                    case ('R'):
+                        next_pos.y++;
+                        break;
+                }
+
+                if (!is_in_grid(in, next_pos)) continue;
+                bool ok = true;
+                for (int i = 1; i < ssize(state.snake_pos); i++) {
+                    if (next_pos == state.snake_pos[i]) {
+                        ok = false;
+                        break;
+                    }
+                }
+                if (!ok) continue;
+                if (dist[next_pos.x][next_pos.y] != -1) continue;
+
+                q.emplace(next_pos);
+                dist[next_pos.x][next_pos.y] = dist[curr_pos.x][curr_pos.y] + 1;
+            }
+        }
+
+        if (target_pos == Vec2{-1, -1}) {
+            // 目的の色までの経路が存在しないときの処理（未実装）
+        }
+
+        vector<char> path;
+        Vec2 curr_pos = target_pos;
+        while (curr_pos != start_pos) {
+            if (is_in_grid(in, {curr_pos.x - 1, curr_pos.y}) && dist[curr_pos.x - 1][curr_pos.y] == dist[curr_pos.x][curr_pos.y] - 1) {
+                curr_pos.x--;
+                path.emplace_back('D');
+            } else if (is_in_grid(in, {curr_pos.x + 1, curr_pos.y}) && dist[curr_pos.x + 1][curr_pos.y] == dist[curr_pos.x][curr_pos.y] - 1) {
+                curr_pos.x++;
+                path.emplace_back('U');
+            } else if (is_in_grid(in, {curr_pos.x, curr_pos.y - 1}) && dist[curr_pos.x][curr_pos.y - 1] == dist[curr_pos.x][curr_pos.y] - 1) {
+                curr_pos.y--;
+                path.emplace_back('R');
+            } else if (is_in_grid(in, {curr_pos.x, curr_pos.y + 1}) && dist[curr_pos.x][curr_pos.y + 1] == dist[curr_pos.x][curr_pos.y] - 1) {
+                curr_pos.y++;
+                path.emplace_back('L');
+            }
+        }
+        ranges::reverse(path);
+
+        for (const char p : path) state.move(in, p);
+    }
+
+    return state;
+}
+
 int main() {
     constexpr int TIME_LIMIT = 1950;
     TimeKeeper time_keeper(TIME_LIMIT);
 
     const Input in = read_input();
 
-    State best_state = zigzag(in);
+    State best_state = greedy(in);
     best_state.print_actions();
 
     return 0;
