@@ -38,6 +38,27 @@ struct Input {
     vector<vector<int>> f;  // 初期状態において各マスに置かれている餌の色
 };
 
+Input read_input() {
+    ios_base::sync_with_stdio(false);
+    cin.tie(nullptr);
+
+    Input in;
+    cin >> in.N >> in.M >> in.C;
+    in.d.resize(in.M);
+    for (int i = 0; i < in.M; i++) cin >> in.d[i];
+    in.f.resize(in.N, vector<int>(in.N));
+    for (int i = 0; i < in.N; i++) {
+        for (int j = 0; j < in.N; j++) {
+            cin >> in.f[i][j];
+        }
+    }
+    return in;
+}
+
+bool is_in_grid(const Input& in, const Vec2& pos) {
+    return 0 <= pos.x && pos.x < in.N && 0 <= pos.y && pos.y < in.N;
+}
+
 class State {
 private:
 
@@ -57,6 +78,30 @@ public:
         for (int i = 0; i < 5; i++) snake_color[i] = 1;
 
         calc_game_score(in);
+    }
+
+    bool can_move(const Input& in, const char dir) const {
+        Vec2 head = snake_pos.front();
+        switch (dir) {
+            case ('U'):
+                head.x--;
+                break;
+            case ('D'):
+                head.x++;
+                break;
+            case ('L'):
+                head.y--;
+                break;
+            case ('R'):
+                head.y++;
+                break;
+        }
+
+        if (!is_in_grid(in, head)) return false;
+        for (const Vec2& body : snake_pos) {
+            if (head == body) return false;
+        }
+        return true;
     }
 
     void move(const Input& in, const char dir) {
@@ -106,51 +151,6 @@ public:
     }
 };
 
-Input read_input() {
-    ios_base::sync_with_stdio(false);
-    cin.tie(nullptr);
-
-    Input in;
-    cin >> in.N >> in.M >> in.C;
-    in.d.resize(in.M);
-    for (int i = 0; i < in.M; i++) cin >> in.d[i];
-    in.f.resize(in.N, vector<int>(in.N));
-    for (int i = 0; i < in.N; i++) {
-        for (int j = 0; j < in.N; j++) {
-            cin >> in.f[i][j];
-        }
-    }
-    return in;
-}
-
-bool is_in_grid(const Input& in, const Vec2& pos) {
-    return 0 <= pos.x && pos.x < in.N && 0 <= pos.y && pos.y < in.N;
-}
-
-bool can_move(const Input& in, const State& state, const char dir) {
-    Vec2 head = state.snake_pos.front();
-    switch (dir) {
-        case ('U'):
-            head.x--;
-            break;
-        case ('D'):
-            head.x++;
-            break;
-        case ('L'):
-            head.y--;
-            break;
-        case ('R'):
-            head.y++;
-            break;
-    }
-
-    if (!is_in_grid(in, head)) return false;
-    for (const Vec2& body : state.snake_pos) {
-        if (head == body) return false;
-    }
-    return true;
-}
-
 State zigzag(const Input& in) {
     State state(in);
     State best_state = state;
@@ -190,7 +190,7 @@ State bfs_all_route(const Input& in) {
         if (state.game_score < best_state.game_score) best_state = state;
 
         for (const char d : dir) {
-            if (!can_move(in, state, d)) continue;
+            if (!state.can_move(in, d)) continue;
             State next_state = state;
             next_state.move(in, d);
             q.emplace(next_state);
