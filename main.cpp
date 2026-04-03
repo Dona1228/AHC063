@@ -184,15 +184,16 @@ State bfs_all_route(const Input& in) {
     q.emplace(State(in));
 
     while (!q.empty()) {
-        State state = q.front();
+        const State state = q.front();
         q.pop();
 
         if (state.game_score < best_state.game_score) best_state = state;
 
         for (const char d : dir) {
             if (!can_move(in, state, d)) continue;
-            state.move(in, d);
-            q.emplace(state);
+            State next_state = state;
+            next_state.move(in, d);
+            q.emplace(next_state);
         }
     }
 
@@ -205,7 +206,7 @@ int main() {
 
     const Input in = read_input();
 
-    State best_state = zigzag(in);
+    State best_state = bfs_all_route(in);
     best_state.print_actions();
 
     return 0;
