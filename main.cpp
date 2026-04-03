@@ -229,7 +229,7 @@ State greedy(const Input& in, TimeKeeper& time_keeper) {
 
         for (int t = 0; ssize(state.snake_color) < in.M; t++) {
             int target_color = in.d[ssize(state.snake_color)];
-            if (xorshift() % 5 == 0) target_color = -1;
+            if (xorshift() % 6 == 0) target_color = -1;
             
             const Vec2& start_pos = state.snake_pos.front();
             Vec2 target_pos = {-1, -1};
