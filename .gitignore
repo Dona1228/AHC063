@@ -5,6 +5,7 @@ main
 .python-version
 
 tools/
+img/
 pahcer/
 pahcer-studio/
 pahcer_config.toml
