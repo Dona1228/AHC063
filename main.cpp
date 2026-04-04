@@ -222,6 +222,8 @@ State bfs_all_route(const Input& in) {
 State greedy(const Input& in, TimeKeeper& time_keeper) {
     const array<char, 4> dir{'U', 'D', 'L', 'R'};
 
+    const double reject_prob = 0.5 * in.M / (3.0 * in.N * in.N / 4.0);
+
     State best_state = zigzag(in);
 
     while (!time_keeper.is_time_over()) {
@@ -229,7 +231,7 @@ State greedy(const Input& in, TimeKeeper& time_keeper) {
 
         for (int t = 0; ssize(state.snake_color) < in.M; t++) {
             int target_color = in.d[ssize(state.snake_color)];
-            if (xorshift() % 6 == 0) target_color = -1;
+            if (xorshift() % 100 < reject_prob * 100) target_color = -1;
             
             const Vec2& start_pos = state.snake_pos.front();
             Vec2 target_pos = {-1, -1};
