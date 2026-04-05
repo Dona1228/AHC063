@@ -59,12 +59,12 @@ bool is_in_grid(const Input& in, const Vec2& pos) {
     return 0 <= pos.x && pos.x < in.N && 0 <= pos.y && pos.y < in.N;
 }
 
-int xorshift() {
-    static int tx = 123456789;
-    static int ty = 362436069;
-    static int tz = 521288629;
-    static int tw = 88675123;
-    int tt = (tx ^ (tx << 11));
+unsigned int xorshift() {
+    static unsigned int tx = 123456789;
+    static unsigned int ty = 362436069;
+    static unsigned int tz = 521288629;
+    static unsigned int tw = 88675123;
+    unsigned int tt = (tx ^ (tx << 11));
     tx = ty;
     ty = tz;
     tz = tw;
