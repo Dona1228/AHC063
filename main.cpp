@@ -173,7 +173,17 @@ public:
     }
 
     void calc_evaluated_score(const Input& in) {
-        evaluated_score = -game_score;
+        int streak = 0;
+        for (int i = 0; i < ssize(snake_color); i++) {
+            if (snake_color[i] != in.d[i]) break;
+            streak++;
+        }
+
+        int wrong = ssize(snake_color) - streak;
+
+        int turn = ssize(actions);
+
+        evaluated_score = streak * 1000 + wrong * (-500) + turn * (-1);
     }
 
     void update(const Input& in) {
