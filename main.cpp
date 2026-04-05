@@ -322,13 +322,13 @@ State custom_zigzag(const Input& in) {
     for (int x = 4; x < in.N - 1; x++) base_state.move(in, 'D');
 
     if (in.N % 2 == 0) {
-        for (int bit = 0; bit < (1 << in.N - 1); bit++) {
+        for (int bit = 0; bit < (1 << (in.N - 1)); bit++) {
             State state = base_state;
             state.move(in, 'R');
             
             vector<bool> wall(in.N, false);
             for (int i = 0; i < in.N - 1; i++) {
-                if (bit >> i & 1) wall[i + 1] = true;
+                if ((bit >> i) & 1) wall[i + 1] = true;
             }
             wall[0] = true;
 
@@ -392,7 +392,7 @@ State custom_zigzag(const Input& in) {
             
             vector<bool> wall(in.N, false);
             for (int i = 0; i < in.N - 2; i++) {
-                if (bit >> i & 1) wall[i + 1] = true;
+                if ((bit >> i) & 1) wall[i + 1] = true;
             }
             wall[in.N - 1] = true;
 
