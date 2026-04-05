@@ -170,7 +170,7 @@ public:
     }
 };
 
-State zigzag(const Input& in) {
+State simple_zigzag(const Input& in) {
     State state(in);
     State best_state = state;
 
@@ -224,7 +224,7 @@ State greedy(const Input& in, TimeKeeper& time_keeper) {
 
     const double reject_prob = 0.5 * in.M / (3.0 * in.N * in.N / 4.0);
 
-    State best_state = zigzag(in);
+    State best_state(in);
 
     while (!time_keeper.is_time_over()) {
         State state(in);
@@ -272,14 +272,7 @@ State greedy(const Input& in, TimeKeeper& time_keeper) {
                     }
 
                     if (!is_in_grid(in, next_pos)) continue;
-                    bool ok = true;
-                    for (int i = 1; i < ssize(state.snake_pos); i++) {
-                        if (next_pos == state.snake_pos[i]) {
-                            ok = false;
-                            break;
-                        }
-                    }
-                    if (!ok) continue;
+                    if (find(state.snake_pos.begin() + 1, state.snake_pos.end(), next_pos) != state.snake_pos.end()) continue;
                     if (dist[next_pos.x][next_pos.y] != -1) continue;
 
                     q.emplace(next_pos);
@@ -318,13 +311,159 @@ State greedy(const Input& in, TimeKeeper& time_keeper) {
     return best_state;
 }
 
+State custom_zigzag(const Input& in) {
+    State best_state(in);
+
+    State base_state(in);
+    for (int x = 4; x < in.N - 1; x++) base_state.move(in, 'D');
+
+    if (in.N % 2 == 0) {
+        for (int bit = 0; bit < (1 << in.N - 1); bit++) {
+            State state = base_state;
+            state.move(in, 'R');
+            
+            vector<bool> wall(in.N, false);
+            for (int i = 0; i < in.N - 1; i++) {
+                if (bit >> i & 1) wall[i + 1] = true;
+            }
+            wall[0] = true;
+
+            int curr_row = in.N - 1;
+            bool start_left = true;
+            
+            while (curr_row >= 0 && ssize(state.snake_color) != in.M) {
+                int b = curr_row;
+                int t = b;
+                while (t > 0 && !wall[t]) t--;
+                
+                if (start_left) {
+                    for (int y = 1; y < in.N; y++) {
+                        if (y != 1) state.move(in, 'R');
+                        if (ssize(state.snake_color) == in.M) break;
+                        
+                        if ((y - 1) % 2 == 0) {
+                            for (int x = b; x > t; x--) {
+                                state.move(in, 'U');
+                                if (ssize(state.snake_color) == in.M) break;
+                            }
+                        } else {
+                            for (int x = t; x < b; x++) {
+                                state.move(in, 'D');
+                                if (ssize(state.snake_color) == in.M) break;
+                            }
+                        }
+                    }
+                    curr_row = t - 1;
+                    start_left = false;
+                    if (curr_row >= 0 && ssize(state.snake_color) != in.M) state.move(in, 'U');
+                } else {
+                    for (int y = in.N - 1; y >= 1; y--) {
+                        if (y != in.N - 1) state.move(in, 'L');
+                        if (ssize(state.snake_color) == in.M) break;
+                        
+                        if ((in.N - 1 - y) % 2 == 0) {
+                            for (int x = b; x > t; x--) {
+                                state.move(in, 'U');
+                                if (ssize(state.snake_color) == in.M) break;
+                            }
+                        } else {
+                            for (int x = t; x < b; x++) {
+                                state.move(in, 'D');
+                                if (ssize(state.snake_color) == in.M) break;
+                            }
+                        }
+                    }
+                    curr_row = t - 1;
+                    start_left = true;
+                    if (curr_row >= 0 && ssize(state.snake_color) != in.M) state.move(in, 'U');
+                }
+            }
+
+            if (ssize(state.snake_color) == in.M && state.game_score < best_state.game_score) best_state = state;
+        }
+    } else {
+        for (int bit = 0; bit < (1 << (in.N - 2)); bit++) {
+            State state = base_state;
+            state.move(in, 'R');
+            
+            vector<bool> wall(in.N, false);
+            for (int i = 0; i < in.N - 2; i++) {
+                if (bit >> i & 1) wall[i + 1] = true;
+            }
+            wall[in.N - 1] = true;
+
+            int curr_col = 1;
+            bool start_bottom = true;
+            
+            while (curr_col < in.N && ssize(state.snake_color) != in.M) {
+                int l = curr_col;
+                int r = l;
+                while (r < in.N - 1 && !wall[r]) r++;
+                
+                if (start_bottom) {
+                    for (int x = in.N - 1; x >= 0; x--) {
+                        if (x != in.N - 1) state.move(in, 'U');
+                        if (ssize(state.snake_color) == in.M) break;
+                        
+                        if ((in.N - 1 - x) % 2 == 0) {
+                            for (int y = l; y < r; y++) {
+                                state.move(in, 'R');
+                                if (ssize(state.snake_color) == in.M) break;
+                            }
+                        } else {
+                            for (int y = r; y > l; y--) {
+                                state.move(in, 'L');
+                                if (ssize(state.snake_color) == in.M) break;
+                            }
+                        }
+                    }
+                    curr_col = r + 1;
+                    start_bottom = false;
+                    if (curr_col < in.N && ssize(state.snake_color) != in.M) state.move(in, 'R');
+                } else {
+                    for (int x = 0; x < in.N; x++) {
+                        if (x != 0) state.move(in, 'D');
+                        if (ssize(state.snake_color) == in.M) break;
+                        
+                        if (x % 2 == 0) {
+                            for (int y = l; y < r; y++) {
+                                state.move(in, 'R');
+                                if (ssize(state.snake_color) == in.M) break;
+                            }
+                        } else {
+                            for (int y = r; y > l; y--) {
+                                state.move(in, 'L');
+                                if (ssize(state.snake_color) == in.M) break;
+                            }
+                        }
+                    }
+                    curr_col = r + 1;
+                    start_bottom = true;
+                    if (curr_col < in.N && ssize(state.snake_color) != in.M) state.move(in, 'R');
+                }
+            }
+
+            if (ssize(state.snake_color) == in.M && state.game_score < best_state.game_score) best_state = state;
+        }
+    }
+
+    return best_state;
+}
+
 int main() {
     constexpr int TIME_LIMIT = 1950;
     TimeKeeper time_keeper(TIME_LIMIT);
 
     const Input in = read_input();
 
-    State best_state = greedy(in, time_keeper);
+    State best_state(in);
+    
+    State zigzag_state = custom_zigzag(in);
+    if (zigzag_state.game_score < best_state.game_score) best_state = zigzag_state;
+
+    State greedy_state = greedy(in, time_keeper);
+    if (greedy_state.game_score < best_state.game_score) best_state = greedy_state;
+    
     best_state.print_actions();
 
     return 0;
