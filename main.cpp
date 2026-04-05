@@ -89,7 +89,11 @@ public:
         snake_color.resize(5);
         for (int i = 0; i < 5; i++) snake_color[i] = 1;
 
-        calc_game_score(in);
+        update(in);
+    }
+
+    bool operator<(const State& other) const {
+        return evaluated_score < other.evaluated_score;
     }
 
     bool can_move(const Input& in, const char dir) const {
@@ -152,9 +156,12 @@ public:
             }
         }
 
-        // 状態の更新
         actions.emplace_back(dir);
-        calc_game_score(in);
+        update(in);
+    }
+
+    bool is_finished(const Input& in) {
+        return snake_color == in.d;
     }
 
     void calc_game_score(const Input& in) {
@@ -163,6 +170,15 @@ public:
             if (snake_color[i] != in.d[i]) error++;
         }
         game_score = ssize(actions) + 10000 * (error + 2 * (in.M - ssize(snake_color)));
+    }
+
+    void calc_evaluated_score(const Input& in) {
+        evaluated_score = -game_score;
+    }
+
+    void update(const Input& in) {
+        calc_game_score(in);
+        calc_evaluated_score(in);
     }
 
     void print_actions() {
@@ -454,6 +470,53 @@ State custom_zigzag(const Input& in) {
     return best_state;
 }
 
+State beam_search(const Input& in, TimeKeeper& time_keeper, const int beam_width) {
+    const array<char, 4> dir{'U', 'D', 'L', 'R'};
+
+    State best_state(in);
+
+    priority_queue<State> curr_beam;
+    curr_beam.emplace(best_state);
+
+    while (!time_keeper.is_time_over()) {
+        if (curr_beam.empty()) break;
+
+        priority_queue<State> next_beam;
+        bool all_finished = true;
+
+        for (int i = 0; i < beam_width; i++) {
+            if (curr_beam.empty()) break;
+
+            State state = curr_beam.top();
+            curr_beam.pop();
+
+            if (state.is_finished(in)) {
+                next_beam.emplace(state);
+                continue;
+            }
+
+            all_finished = false;
+
+            for (const char d : dir) {
+                if (!state.can_move(in, d)) continue;
+
+                State next_state = state;
+                next_state.move(in, d);
+
+                next_beam.emplace(next_state);
+            }
+        }
+
+        curr_beam = next_beam;
+
+        if (curr_beam.top().game_score < best_state.game_score) best_state = curr_beam.top();
+
+        if (all_finished) break;
+    }
+
+    return best_state;
+}
+
 int main() {
     constexpr int TIME_LIMIT = 1950;
     TimeKeeper time_keeper(TIME_LIMIT);
@@ -462,11 +525,15 @@ int main() {
 
     State best_state(in);
     
-    State zigzag_state = custom_zigzag(in);
-    if (zigzag_state.game_score < best_state.game_score) best_state = zigzag_state;
+    // State zigzag_state = custom_zigzag(in);
+    // if (zigzag_state.game_score < best_state.game_score) best_state = zigzag_state;
 
-    State greedy_state = greedy(in, time_keeper);
-    if (greedy_state.game_score < best_state.game_score) best_state = greedy_state;
+    // State greedy_state = greedy(in, time_keeper);
+    // if (greedy_state.game_score < best_state.game_score) best_state = greedy_state;
+
+    constexpr int BEAM_WIDTH = 10;
+    State beam_state = beam_search(in, time_keeper, BEAM_WIDTH);
+    if (beam_state.game_score < best_state.game_score) best_state = beam_state;
     
     best_state.print_actions();
 
