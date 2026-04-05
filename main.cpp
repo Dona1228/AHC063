@@ -274,6 +274,7 @@ State greedy(const Input& in, TimeKeeper& time_keeper) {
                     if (!is_in_grid(in, next_pos)) continue;
                     if (find(state.snake_pos.begin() + 1, state.snake_pos.end(), next_pos) != state.snake_pos.end()) continue;
                     if (dist[next_pos.x][next_pos.y] != -1) continue;
+                    if (state.board[next_pos.x][next_pos.y] != 0 && state.board[next_pos.x][next_pos.y] != target_color && target_color != -1) continue;
 
                     q.emplace(next_pos);
                     dist[next_pos.x][next_pos.y] = dist[curr_pos.x][curr_pos.y] + 1;
