@@ -12,9 +12,9 @@ struct Param {
             return default_val;
         };
 
-        w_streak = get_env("STREAK", 1000.0);
-        w_wrong = get_env("WRONG", -500.0);
-        w_turn = get_env("TURN", -1.0);
+        w_streak = get_env("STREAK", 552.9);
+        w_wrong = get_env("WRONG", -471.5);
+        w_turn = get_env("TURN", -6.95);
     }
 };
 
@@ -531,6 +531,8 @@ State beam_search(const Input& in, const Param& param, TimeKeeper& time_keeper, 
                 next_state.move(in, param, d);
 
                 next_beam.emplace(next_state);
+
+                if (next_state.game_score < best_state.game_score) best_state = next_state;
             }
         }
 
