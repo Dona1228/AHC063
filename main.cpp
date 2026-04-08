@@ -5,6 +5,7 @@ struct Param {
     double w_streak;
     double w_wrong;
     double w_turn;
+    double w_dist;
 
     Param() {
         auto get_env = [](const char* name, double default_val) {
@@ -15,6 +16,7 @@ struct Param {
         w_streak = get_env("STREAK", 552.9);
         w_wrong = get_env("WRONG", -471.5);
         w_turn = get_env("TURN", -6.95);
+        w_dist = get_env("DIST", -10.0);
     }
 };
 
@@ -200,7 +202,66 @@ public:
 
         int turn = ssize(actions);
 
-        evaluated_score = streak * param.w_streak + wrong * param.w_wrong + turn * param.w_turn;
+        // BFSで次の目的の色までの最短距離を求める
+        // int min_dist = 0;
+        // if (streak < in.M) {
+        //     min_dist = in.N * in.N;
+        //     int target_color = in.d[streak];
+        //     const Vec2& curr_pos = snake_pos.front();
+
+        //     array<int, 4> dx{-1, 1, 0, 0};
+        //     array<int, 4> dy{0, 0, -1, 1};
+
+        //     vector<vector<int>> dist(in.N, vector<int>(in.N, -1));
+        //     dist[curr_pos.x][curr_pos.y] = 0;
+
+        //     queue<Vec2> q;
+        //     q.emplace(curr_pos);
+
+        //     while (!q.empty()) {
+        //         const Vec2 curr = q.front();
+        //         q.pop();
+
+        //         if (board[curr.x][curr.y] == target_color) {
+        //             min_dist = dist[curr.x][curr.y];
+        //             break;
+        //         }
+
+        //         for (int d = 0; d < 4; d++) {
+        //             Vec2 next_pos = curr;
+        //             next_pos.x += dx[d];
+        //             next_pos.y += dy[d];
+
+        //             if (!is_in_grid(in, next_pos)) continue;
+        //             if (dist[next_pos.x][next_pos.y] != -1) continue;
+        //             if (find(snake_pos.begin() + 1, snake_pos.end(), next_pos) < snake_pos.end() - dist[curr.x][curr.y] - 1) continue;
+
+        //             q.emplace(next_pos);
+        //             dist[next_pos.x][next_pos.y] = dist[curr.x][curr.y] + 1;
+        //         }
+        //     }
+        // }
+        
+        // 目的の色までのマンハッタン距離を求める
+        int min_dist = in.N * in.N;
+        if (streak < in.M) {
+            int target_color = in.d[streak];
+            const Vec2& curr = snake_pos.front();
+            
+            for (int x = 0; x < in.N; ++x) {
+                for (int y = 0; y < in.N; ++y) {
+                    if (board[x][y] == target_color) {
+                        int d = abs(x - curr.x) + abs(y - curr.y);
+                        if (d < min_dist) min_dist = d;
+                    }
+                }
+            }
+        }
+
+        evaluated_score = streak * param.w_streak
+                        + wrong * param.w_wrong
+                        + turn * param.w_turn
+                        + min_dist * param.w_dist;
     }
 
     void update(const Input& in, const Param& param) {

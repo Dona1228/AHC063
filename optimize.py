@@ -13,7 +13,8 @@ def generate_params(trial: optuna.trial.Trial) -> dict[str, str]:
     params = {
         "STREAK": str(trial.suggest_float("streak", 0.0, 1e4)),
         "WRONG": str(trial.suggest_float("wrong", -1e3, 0.0)),
-        "TURN": str(trial.suggest_float("turn", -1e1, 1e1))
+        "TURN": str(trial.suggest_float("turn", -1e1, 1e1)),
+        "DIST": str(trial.suggest_float("dist", -1e2, 1e2))
     }
 
     return params
