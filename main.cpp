@@ -13,10 +13,10 @@ struct Param {
             return default_val;
         };
 
-        w_streak = get_env("STREAK", 552.9);
-        w_wrong = get_env("WRONG", -471.5);
-        w_turn = get_env("TURN", -6.95);
-        w_dist = get_env("DIST", -10.0);
+        w_streak = get_env("STREAK", 621.5);
+        w_wrong = get_env("WRONG", -634.2);
+        w_turn = get_env("TURN", -8.2);
+        w_dist = get_env("DIST", -38.6);
     }
 };
 
