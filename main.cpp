@@ -54,7 +54,7 @@ struct Input {
     int M;  // 好みの色列の長さ
     int C;  // 色数
     vector<int> d;  // 好みの色列
-    vector<vector<int>> f;  // 初期状態において各マスに置かれている餌の色
+    array<int, 256> f;  // 初期状態において各マスに置かれている餌の色
 };
 
 Input read_input() {
@@ -65,10 +65,9 @@ Input read_input() {
     cin >> in.N >> in.M >> in.C;
     in.d.resize(in.M);
     for (int i = 0; i < in.M; i++) cin >> in.d[i];
-    in.f.resize(in.N, vector<int>(in.N));
     for (int i = 0; i < in.N; i++) {
         for (int j = 0; j < in.N; j++) {
-            cin >> in.f[i][j];
+            cin >> in.f[i * in.N + j];
         }
     }
     return in;
@@ -96,7 +95,7 @@ private:
 public:
     int game_score;
     double evaluated_score;
-    vector<vector<int>> board;
+    array<int, 256> board;
     vector<int> snake_color;
     vector<char> actions;
     deque<Vec2> snake_pos;
@@ -156,18 +155,18 @@ public:
         snake_pos.emplace_front(head);
 
         // 食事
-        if (board[head.x][head.y] == 0) {
+        if (board[head.x * in.N + head.y] == 0) {
             snake_pos.pop_back();
         } else {
-            snake_color.emplace_back(board[head.x][head.y]);
-            board[head.x][head.y] = 0;
+            snake_color.emplace_back(board[head.x * in.N + head.y]);
+            board[head.x * in.N + head.y] = 0;
         }
 
         // 噛みちぎり
         for (int i = 1; i < ssize(snake_pos); i++) {
             if (head == snake_pos[i]) {
                 for (int j = i + 1; j < ssize(snake_pos); j++) {
-                    board[snake_pos[j].x][snake_pos[j].y] = snake_color[j];
+                    board[snake_pos[j].x * in.N + snake_pos[j].y] = snake_color[j];
                 }
                 snake_color.erase(snake_color.begin() + i + 1, snake_color.end());
                 snake_pos.erase(snake_pos.begin() + i + 1, snake_pos.end());
@@ -250,7 +249,7 @@ public:
             
             for (int x = 0; x < in.N; ++x) {
                 for (int y = 0; y < in.N; ++y) {
-                    if (board[x][y] == target_color) {
+                    if (board[x * in.N + y] == target_color) {
                         int d = abs(x - curr.x) + abs(y - curr.y);
                         if (d < min_dist) min_dist = d;
                     }
@@ -350,10 +349,10 @@ State greedy(const Input& in, const Param& param, TimeKeeper& time_keeper) {
                 const Vec2 curr_pos = q.front();
                 q.pop();
 
-                if (state.board[curr_pos.x][curr_pos.y] == target_color) {
+                if (state.board[curr_pos.x * in.N + curr_pos.y] == target_color) {
                     target_pos = curr_pos;
                     break;
-                } else if (target_color == -1 && state.board[curr_pos.x][curr_pos.y] != 0) {
+                } else if (target_color == -1 && state.board[curr_pos.x * in.N + curr_pos.y] != 0) {
                     target_pos = curr_pos;
                     break;
                 }
@@ -381,7 +380,7 @@ State greedy(const Input& in, const Param& param, TimeKeeper& time_keeper) {
 
                     if (dist[next_pos.x][next_pos.y] != -1) continue;
 
-                    if (state.board[next_pos.x][next_pos.y] != 0 && state.board[next_pos.x][next_pos.y] != target_color && target_color != -1) continue;
+                    if (state.board[next_pos.x * in.N + next_pos.y] != 0 && state.board[next_pos.x * in.N + next_pos.y] != target_color && target_color != -1) continue;
 
                     q.emplace(next_pos);
                     dist[next_pos.x][next_pos.y] = dist[curr_pos.x][curr_pos.y] + 1;
@@ -623,7 +622,7 @@ int main() {
     // State greedy_state = greedy(in, time_keeper);
     // if (greedy_state.game_score < best_state.game_score) best_state = greedy_state;
 
-    constexpr int BEAM_WIDTH = 10;
+    constexpr int BEAM_WIDTH = 30;
     State beam_state = beam_search(in, param, time_keeper, BEAM_WIDTH);
     if (beam_state.game_score < best_state.game_score) best_state = beam_state;
     
