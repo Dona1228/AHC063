@@ -54,11 +54,6 @@ struct ZobristHash {
     }
 };
 
-struct Vec2 {
-    int x, y;
-    auto operator<=>(const Vec2 &other) const = default;
-};
-
 class TimeKeeper {
 private:
     chrono::high_resolution_clock::time_point start_time;
@@ -87,11 +82,13 @@ struct Input {
     int N;  // 盤面サイズ
     int M;  // 好みの色列の長さ
     int C;  // 色数
-    vector<int> d;  // 好みの色列
+    array<int, 256> d;  // 好みの色列
     array<int, 256> f;  // 初期状態において各マスに置かれている餌の色
 
-    bool is_in_grid(const Vec2& pos) const {
-        return 0 <= pos.x && pos.x < N && 0 <= pos.y && pos.y < N;
+    bool is_in_grid(const int pos) const {
+        int x = pos / N;
+        int y = pos % N;
+        return 0 <= x && x < N && 0 <= y && y < N;
     }
 };
 
@@ -101,7 +98,6 @@ Input read_input() {
 
     Input in;
     cin >> in.N >> in.M >> in.C;
-    in.d.resize(in.M);
     for (int i = 0; i < in.M; i++) cin >> in.d[i];
     for (int i = 0; i < in.N; i++) {
         for (int j = 0; j < in.N; j++) {
@@ -115,20 +111,22 @@ class State {
 private:
 
 public:
+    int snake_len;
     int game_score;
     double evaluated_score;
     uint64_t board_hash;
     array<int, 256> board;
-    vector<int> snake_color;
+    array<int, 256> snake_pos;
+    array<int, 256> snake_color;
     vector<char> actions;
-    deque<Vec2> snake_pos;
 
     State(const Input& in, const Param& param, const ZobristHash& hash) {
         board = in.f;
-        snake_pos.resize(5);
-        for (int i = 0; i < 5; i++) snake_pos[i] = {5 - i - 1, 0};
-        snake_color.resize(5);
-        for (int i = 0; i < 5; i++) snake_color[i] = 1;
+        snake_len = 5;
+        for (int i = 0; i < 5; i++) {
+            snake_pos[i] = (5 - i - 1) * in.N + 0;
+            snake_color[i] = 1;
+        }
         
         board_hash = 0;
         for (int i = 0; i < 256; i++) {
@@ -143,19 +141,23 @@ public:
     }
 
     bool can_move(const Input& in, const char dir) const {
-        Vec2 head = snake_pos.front();
+        int head = snake_pos[0];
         switch (dir) {
             case ('U'):
-                head.x--;
+                if (head / in.N == 0) return false;
+                head -= in.N;
                 break;
             case ('D'):
-                head.x++;
+                if (head / in.N == in.N - 1) return false;
+                head += in.N;
                 break;
             case ('L'):
-                head.y--;
+                if (head % in.N == 0) return false;
+                head--;
                 break;
             case ('R'):
-                head.y++;
+                if (head % in.N == in.N - 1) return false;
+                head++;
                 break;
         }
         if (!in.is_in_grid(head)) return false;
@@ -165,45 +167,43 @@ public:
 
     void move(const Input& in, const Param& param, const ZobristHash& hash, const char dir) {
         // 移動
-        Vec2 head = snake_pos.front();
+        int head = snake_pos[0];
         switch (dir) {
             case ('U'):
-                head.x--;
+                head -= in.N;
                 break;
             case ('D'):
-                head.x++;
+                head += in.N;
                 break;
             case ('L'):
-                head.y--;
+                head--;
                 break;
             case ('R'):
-                head.y++;
+                head++;
                 break;
         }
-        snake_pos.emplace_front(head);
-
+        for (int i = snake_len; i > 0; i--) snake_pos[i] = snake_pos[i - 1];
+        snake_pos[0] = head;
 
         // 食事
-        if (board[head.x * in.N + head.y] == 0) {
-            snake_pos.pop_back();
-        } else {
-            board_hash ^= hash.board[head.x * in.N + head.y][board[head.x * in.N + head.y]];
-            board_hash ^= hash.board[head.x * in.N + head.y][0];
+        if (board[head] != 0) {
+            board_hash ^= hash.board[head][board[head]];
+            board_hash ^= hash.board[head][0];
 
-            snake_color.emplace_back(board[head.x * in.N + head.y]);
-            board[head.x * in.N + head.y] = 0;
+            snake_color[snake_len] = board[head];
+            snake_len++;
+            board[head] = 0;
         }
 
         // 噛みちぎり
-        for (int i = 1; i < ssize(snake_pos); i++) {
+        for (int i = 1; i < snake_len; i++) {
             if (head == snake_pos[i]) {
-                for (int j = i + 1; j < ssize(snake_pos); j++) {
-                    board_hash ^= hash.board[snake_pos[j].x * in.N + snake_pos[j].y][0];
-                    board_hash ^= hash.board[snake_pos[j].x * in.N + snake_pos[j].y][snake_color[j]];
-                    board[snake_pos[j].x * in.N + snake_pos[j].y] = snake_color[j];
+                for (int j = i + 1; j < snake_len; j++) {
+                    board_hash ^= hash.board[snake_pos[j]][0];
+                    board_hash ^= hash.board[snake_pos[j]][snake_color[j]];
+                    board[snake_pos[j]] = snake_color[j];
                 }
-                snake_color.erase(snake_color.begin() + i + 1, snake_color.end());
-                snake_pos.erase(snake_pos.begin() + i + 1, snake_pos.end());
+                snake_len = i + 1;
                 break;
             }
         }
@@ -213,78 +213,42 @@ public:
     }
 
     bool is_finished(const Input& in) {
-        return snake_color == in.d;
+        if (snake_len != in.M) return false;
+        for (int i = 0; i < snake_len; i++) {
+            if (snake_color[i] != in.d[i]) return false;
+        }
+        return true;
     }
 
     void calc_game_score(const Input& in) {
         int error = 0;
-        for (int i = 0; i < ssize(snake_color); i++) {
+        for (int i = 0; i < snake_len; i++) {
             if (snake_color[i] != in.d[i]) error++;
         }
-        game_score = ssize(actions) + 10000 * (error + 2 * (in.M - ssize(snake_color)));
+        game_score = ssize(actions) + 10000 * (error + 2 * (in.M - snake_len));
     }
 
     void calc_evaluated_score(const Input& in, const Param& param) {
         int streak = 0;
-        for (int i = 0; i < ssize(snake_color); i++) {
+        for (int i = 0; i < snake_len; i++) {
             if (snake_color[i] != in.d[i]) break;
             streak++;
         }
 
-        int wrong = ssize(snake_color) - streak;
+        int wrong = snake_len - streak;
 
         int turn = ssize(actions);
-
-        // BFSで次の目的の色までの最短距離を求める
-        // int min_dist = 0;
-        // if (streak < in.M) {
-        //     min_dist = in.N * in.N;
-        //     int target_color = in.d[streak];
-        //     const Vec2& curr_pos = snake_pos.front();
-
-        //     array<int, 4> dx{-1, 1, 0, 0};
-        //     array<int, 4> dy{0, 0, -1, 1};
-
-        //     vector<vector<int>> dist(in.N, vector<int>(in.N, -1));
-        //     dist[curr_pos.x][curr_pos.y] = 0;
-
-        //     queue<Vec2> q;
-        //     q.emplace(curr_pos);
-
-        //     while (!q.empty()) {
-        //         const Vec2 curr = q.front();
-        //         q.pop();
-
-        //         if (board[curr.x][curr.y] == target_color) {
-        //             min_dist = dist[curr.x][curr.y];
-        //             break;
-        //         }
-
-        //         for (int d = 0; d < 4; d++) {
-        //             Vec2 next_pos = curr;
-        //             next_pos.x += dx[d];
-        //             next_pos.y += dy[d];
-
-        //             if (!is_in_grid(in, next_pos)) continue;
-        //             if (dist[next_pos.x][next_pos.y] != -1) continue;
-        //             if (find(snake_pos.begin() + 1, snake_pos.end(), next_pos) < snake_pos.end() - dist[curr.x][curr.y] - 1) continue;
-
-        //             q.emplace(next_pos);
-        //             dist[next_pos.x][next_pos.y] = dist[curr.x][curr.y] + 1;
-        //         }
-        //     }
-        // }
         
         // 目的の色までのマンハッタン距離を求める
         int min_dist = in.N * in.N;
         if (streak < in.M) {
             int target_color = in.d[streak];
-            const Vec2& curr = snake_pos.front();
+            int curr_pos = snake_pos[0];
             
             for (int x = 0; x < in.N; ++x) {
                 for (int y = 0; y < in.N; ++y) {
                     if (board[x * in.N + y] == target_color) {
-                        int d = abs(x - curr.x) + abs(y - curr.y);
+                        int d = abs(x - curr_pos / in.N) + abs(y - curr_pos % in.N);
                         if (d < min_dist) min_dist = d;
                     }
                 }
@@ -309,10 +273,10 @@ public:
     uint64_t calc_hash(const Input& in, const ZobristHash& hash) const {
         uint64_t h = board_hash;
 
-        h ^= hash.snake_len[ssize(snake_color)];
+        h ^= hash.snake_len[snake_len];
 
-        for (int i = 0; i < min(static_cast<int>(ssize(snake_color)), 8); i++) {
-            h ^= hash.snake_pos[i][snake_pos[i].x * in.N + snake_pos[i].y];
+        for (int i = 0; i < min(snake_len, 8); i++) {
+            h ^= hash.snake_pos[i][snake_pos[i]];
         }
 
         return h;
@@ -382,73 +346,75 @@ State greedy(const Input& in, const Param& param, const ZobristHash& hash, TimeK
             int target_color = in.d[ssize(state.snake_color)];
             if (xorshift() % 100 < reject_prob * 100) target_color = -1;
             
-            const Vec2& start_pos = state.snake_pos.front();
-            Vec2 target_pos = {-1, -1};
+            const int start_pos = state.snake_pos[0];
+            int target_pos = -1;
 
-            vector<vector<int>> dist(in.N, vector<int>(in.N, -1));
-            dist[start_pos.x][start_pos.y] = 0;
+            // vector<vector<int>> dist(in.N, vector<int>(in.N, -1));
+            array<int, 256> dist;
+            ranges::fill(dist, -1);
+            dist[start_pos] = 0;
 
-            queue<Vec2> q;
+            queue<int> q;
             q.emplace(start_pos);
 
             while (!q.empty()) {
-                const Vec2 curr_pos = q.front();
+                const int curr_pos = q.front();
                 q.pop();
 
-                if (state.board[curr_pos.x * in.N + curr_pos.y] == target_color) {
+                if (state.board[curr_pos] == target_color) {
                     target_pos = curr_pos;
                     break;
-                } else if (target_color == -1 && state.board[curr_pos.x * in.N + curr_pos.y] != 0) {
+                } else if (target_color == -1 && state.board[curr_pos] != 0) {
                     target_pos = curr_pos;
                     break;
                 }
             
                 for (const char d : dir) {
-                    Vec2 next_pos = curr_pos;
+                    int next_pos = curr_pos;
                     switch(d) {
                         case ('U'):
-                            next_pos.x--;
+                            next_pos -= in.N;
                             break;
                         case ('D'):
-                            next_pos.x++;
+                            next_pos += in.N;
                             break;
                         case ('L'):
-                            next_pos.y--;
+                            next_pos--;
                             break;
                         case ('R'):
-                            next_pos.y++;
+                            next_pos++;
                             break;
                     }
 
                     if (!in.is_in_grid(next_pos)) continue;
 
-                    if (find(state.snake_pos.begin() + 1, state.snake_pos.end(), next_pos) < state.snake_pos.end() - dist[curr_pos.x][curr_pos.y] - 1) continue;
+                    if (find(state.snake_pos.begin() + 1, state.snake_pos.end(), next_pos) < state.snake_pos.end() - dist[curr_pos] - 1) continue;
 
-                    if (dist[next_pos.x][next_pos.y] != -1) continue;
+                    if (dist[next_pos] != -1) continue;
 
-                    if (state.board[next_pos.x * in.N + next_pos.y] != 0 && state.board[next_pos.x * in.N + next_pos.y] != target_color && target_color != -1) continue;
+                    if (state.board[next_pos] != 0 && state.board[next_pos] != target_color && target_color != -1) continue;
 
                     q.emplace(next_pos);
-                    dist[next_pos.x][next_pos.y] = dist[curr_pos.x][curr_pos.y] + 1;
+                    dist[next_pos] = dist[curr_pos] + 1;
                 }
             }
 
-            if (target_pos == Vec2{-1, -1}) break;
+            if (target_pos == -1) break;
 
             vector<char> path;
-            Vec2 curr_pos = target_pos;
+            int curr_pos = target_pos;
             while (curr_pos != start_pos) {
-                if (in.is_in_grid({curr_pos.x - 1, curr_pos.y}) && dist[curr_pos.x - 1][curr_pos.y] == dist[curr_pos.x][curr_pos.y] - 1) {
-                    curr_pos.x--;
+                if (in.is_in_grid({curr_pos - in.N}) && dist[curr_pos - in.N] == dist[curr_pos] - 1) {
+                    curr_pos -= in.N;
                     path.emplace_back('D');
-                } else if (in.is_in_grid({curr_pos.x + 1, curr_pos.y}) && dist[curr_pos.x + 1][curr_pos.y] == dist[curr_pos.x][curr_pos.y] - 1) {
-                    curr_pos.x++;
+                } else if (in.is_in_grid({curr_pos + in.N}) && dist[curr_pos + in.N] == dist[curr_pos] - 1) {
+                    curr_pos += in.N;
                     path.emplace_back('U');
-                } else if (in.is_in_grid({curr_pos.x, curr_pos.y - 1}) && dist[curr_pos.x][curr_pos.y - 1] == dist[curr_pos.x][curr_pos.y] - 1) {
-                    curr_pos.y--;
+                } else if (in.is_in_grid({curr_pos - 1}) && dist[curr_pos - 1] == dist[curr_pos] - 1) {
+                    curr_pos--;
                     path.emplace_back('R');
-                } else if (in.is_in_grid({curr_pos.x, curr_pos.y + 1}) && dist[curr_pos.x][curr_pos.y + 1] == dist[curr_pos.x][curr_pos.y] - 1) {
-                    curr_pos.y++;
+                } else if (in.is_in_grid({curr_pos + 1}) && dist[curr_pos + 1] == dist[curr_pos] - 1) {
+                    curr_pos++;
                     path.emplace_back('L');
                 }
             }
