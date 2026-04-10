@@ -43,12 +43,14 @@ struct ZobristHash {
     array<array<uint64_t, 8>, 256> board;  // マスの座標、色
     array<array<uint64_t, 256>, HASH_LEN> snake_pos;  // ヘビの頭からのインデックス、座標
     array<uint64_t, 256> snake_len;  // ヘビの長さ
+    array<uint64_t, 256> streak;  // 頭から何マス連続して好みの色をそろえているか
 
     ZobristHash() {
         for (int i = 0; i < 256; i++) {
             for (int j = 0; j < 8; j++) board[i][j] = xorshift64();
             for (int j = 0; j < HASH_LEN; j++) snake_pos[j][i] = xorshift64();
             snake_len[i] = xorshift64();
+            streak[i] = xorshift64();
         }
     }
 };
@@ -277,6 +279,13 @@ public:
         for (int i = 0; i < min(snake_len, hash.HASH_LEN); i++) {
             h ^= hash.snake_pos[i][snake_pos[i]];
         }
+
+        int streak = 0;
+        for (int i = 0; i < snake_len; i++) {
+            if (snake_color[i] != in.d[i]) break;
+            streak++;
+        }
+        h ^= hash.streak[streak];
 
         return h;
     }
