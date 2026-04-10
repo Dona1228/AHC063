@@ -674,7 +674,7 @@ int main() {
     // State greedy_state = greedy(in, time_keeper);
     // if (greedy_state.game_score < best_state.game_score) best_state = greedy_state;
 
-    constexpr int BEAM_WIDTH = 30;
+    constexpr int BEAM_WIDTH = 50;
     State beam_state = beam_search(in, param, hash, time_keeper, BEAM_WIDTH);
     if (beam_state.game_score < best_state.game_score) best_state = beam_state;
     
