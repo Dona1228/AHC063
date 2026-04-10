@@ -55,6 +55,10 @@ struct Input {
     int C;  // 色数
     vector<int> d;  // 好みの色列
     array<int, 256> f;  // 初期状態において各マスに置かれている餌の色
+
+    bool is_in_grid(const Vec2& pos) const {
+        return 0 <= pos.x && pos.x < N && 0 <= pos.y && pos.y < N;
+    }
 };
 
 Input read_input() {
@@ -71,10 +75,6 @@ Input read_input() {
         }
     }
     return in;
-}
-
-bool is_in_grid(const Input& in, const Vec2& pos) {
-    return 0 <= pos.x && pos.x < in.N && 0 <= pos.y && pos.y < in.N;
 }
 
 unsigned int xorshift() {
@@ -130,7 +130,7 @@ public:
                 head.y++;
                 break;
         }
-        if (!is_in_grid(in, head)) return false;
+        if (!in.is_in_grid(head)) return false;
         if (head == snake_pos[1]) return false;
         return true;
     }
@@ -388,7 +388,7 @@ State greedy(const Input& in, const Param& param, TimeKeeper& time_keeper) {
                             break;
                     }
 
-                    if (!is_in_grid(in, next_pos)) continue;
+                    if (!in.is_in_grid(next_pos)) continue;
 
                     if (find(state.snake_pos.begin() + 1, state.snake_pos.end(), next_pos) < state.snake_pos.end() - dist[curr_pos.x][curr_pos.y] - 1) continue;
 
@@ -406,16 +406,16 @@ State greedy(const Input& in, const Param& param, TimeKeeper& time_keeper) {
             vector<char> path;
             Vec2 curr_pos = target_pos;
             while (curr_pos != start_pos) {
-                if (is_in_grid(in, {curr_pos.x - 1, curr_pos.y}) && dist[curr_pos.x - 1][curr_pos.y] == dist[curr_pos.x][curr_pos.y] - 1) {
+                if (in.is_in_grid({curr_pos.x - 1, curr_pos.y}) && dist[curr_pos.x - 1][curr_pos.y] == dist[curr_pos.x][curr_pos.y] - 1) {
                     curr_pos.x--;
                     path.emplace_back('D');
-                } else if (is_in_grid(in, {curr_pos.x + 1, curr_pos.y}) && dist[curr_pos.x + 1][curr_pos.y] == dist[curr_pos.x][curr_pos.y] - 1) {
+                } else if (in.is_in_grid({curr_pos.x + 1, curr_pos.y}) && dist[curr_pos.x + 1][curr_pos.y] == dist[curr_pos.x][curr_pos.y] - 1) {
                     curr_pos.x++;
                     path.emplace_back('U');
-                } else if (is_in_grid(in, {curr_pos.x, curr_pos.y - 1}) && dist[curr_pos.x][curr_pos.y - 1] == dist[curr_pos.x][curr_pos.y] - 1) {
+                } else if (in.is_in_grid({curr_pos.x, curr_pos.y - 1}) && dist[curr_pos.x][curr_pos.y - 1] == dist[curr_pos.x][curr_pos.y] - 1) {
                     curr_pos.y--;
                     path.emplace_back('R');
-                } else if (is_in_grid(in, {curr_pos.x, curr_pos.y + 1}) && dist[curr_pos.x][curr_pos.y + 1] == dist[curr_pos.x][curr_pos.y] - 1) {
+                } else if (in.is_in_grid({curr_pos.x, curr_pos.y + 1}) && dist[curr_pos.x][curr_pos.y + 1] == dist[curr_pos.x][curr_pos.y] - 1) {
                     curr_pos.y++;
                     path.emplace_back('L');
                 }
