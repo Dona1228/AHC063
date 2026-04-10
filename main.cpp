@@ -6,6 +6,10 @@ struct Param {
     double w_wrong;
     double w_turn;
     double w_dist;
+    double w_streak_m;
+    double w_wrong_m;
+    double w_turn_m;
+    double w_dist_m;
 
     Param() {
         auto get_env = [](const char* name, double default_val) {
@@ -13,10 +17,14 @@ struct Param {
             return default_val;
         };
 
-        w_streak = get_env("STREAK", 1351.4);
-        w_wrong = get_env("WRONG", -1474.9);
-        w_turn = get_env("TURN", -132.46);
-        w_dist = get_env("DIST", -40.122);
+        w_streak = get_env("STREAK", 754.0);
+        w_wrong = get_env("WRONG", -100.3);
+        w_turn = get_env("TURN", -59.03);
+        w_dist = get_env("DIST", -26.02);
+        w_streak_m = get_env("STREAK_M", 1298.6);
+        w_wrong_m = get_env("WRONG_M", -1370.2);
+        w_turn_m = get_env("TURN_M", -44.52);
+        w_dist_m = get_env("DIST_M", -65.09);
     }
 };
 
@@ -256,10 +264,10 @@ public:
             }
         }
 
-        evaluated_score = streak * param.w_streak
-                        + wrong * param.w_wrong
-                        + turn * param.w_turn
-                        + min_dist * param.w_dist;
+        evaluated_score = streak * (param.w_streak + in.M * param.w_streak_m)
+                        + wrong * (param.w_wrong + in.M * param.w_wrong_m)
+                        + turn * (param.w_turn + in.M * param.w_turn_m)
+                        + min_dist * (param.w_dist + in.M * param.w_dist_m);
     }
 
     void update(const Input& in, const Param& param) {
