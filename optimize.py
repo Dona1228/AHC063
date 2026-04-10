@@ -11,10 +11,10 @@ import optuna
 def generate_params(trial: optuna.trial.Trial) -> dict[str, str]:
     # for more information, see https://optuna.readthedocs.io/en/stable/reference/generated/optuna.trial.Trial.html
     params = {
-        "STREAK": str(trial.suggest_float("streak", 0.0, 1e4)),
-        "WRONG": str(trial.suggest_float("wrong", -1e3, 0.0)),
-        "TURN": str(trial.suggest_float("turn", -1e1, 1e1)),
-        "DIST": str(trial.suggest_float("dist", -1e2, 1e2))
+        "STREAK": str(trial.suggest_float("streak", 1e2, 2e3)),
+        "WRONG": str(trial.suggest_float("wrong", -2e3, -1e2)),
+        "TURN": str(trial.suggest_float("turn", -2e2, 0.0)),
+        "DIST": str(trial.suggest_float("dist", -1e2, 0.0))
     }
 
     return params
@@ -42,7 +42,7 @@ def get_direction() -> str:
 
 # TODO: Set the timeout (seconds) or the number of trials
 def run_optimization(study: optuna.study.Study) -> None:
-    study.optimize(Objective(), timeout=600)
+    study.optimize(Objective(), timeout=900)
     # study.optimize(Objective(), n_trials=100)
 
 

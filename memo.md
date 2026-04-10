@@ -171,3 +171,7 @@
     - 評価関数の改善
 - 高速化のためにVec2、vector、dequeを書き換えた
     - ビーム幅を50から100に変更
+    - Optunaでパラメータチューニング
+        - best params = {'streak': 1351.4383990280567, 'wrong': -1474.916371811884, 'turn': -132.4580443412194, 'dist': -40.12213550199051}
+        - best score  = 63089.26
+        - parameter importances = {'wrong': 0.7720,'streak': 0.1828,'dist': 0.0279,'turn': 0.0173}
