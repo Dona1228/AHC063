@@ -271,6 +271,20 @@ public:
     void print_actions() {
         for (const auto a : actions) cout << a << "\n";
     }
+
+    uint64_t calc_hash() const {
+        uint64_t h = 0;
+        
+        h ^= (snake_pos[0].x * 31ULL + snake_pos[0].y) * 123456789ULL;
+        
+        h ^= (ssize(snake_color) * 10007ULL);
+        
+        for (int i = 1; i < min(static_cast<int>(ssize(snake_color)), 5); i++) {
+            h ^= (snake_pos[i].x * 15ULL + snake_pos[i].y) * (i * 987654321ULL);
+        }
+        
+        return h;
+    }
 };
 
 State simple_zigzag(const Input& in, const Param& param) {
@@ -571,6 +585,8 @@ State beam_search(const Input& in, const Param& param, TimeKeeper& time_keeper, 
         priority_queue<State> next_beam;
         bool all_finished = true;
 
+        unordered_set<uint64_t> seen_hash;
+
         for (int i = 0; i < beam_width; i++) {
             if (curr_beam.empty()) break;
 
@@ -590,7 +606,11 @@ State beam_search(const Input& in, const Param& param, TimeKeeper& time_keeper, 
                 State next_state = state;
                 next_state.move(in, param, d);
 
+                const uint64_t hash = next_state.calc_hash();
+                if (seen_hash.contains(hash)) continue;
+
                 next_beam.emplace(next_state);
+                seen_hash.emplace(hash);
 
                 if (next_state.game_score < best_state.game_score) best_state = next_state;
             }
