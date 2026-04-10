@@ -20,6 +20,40 @@ struct Param {
     }
 };
 
+unsigned int xorshift() {
+    static unsigned int tx = 123456789;
+    static unsigned int ty = 362436069;
+    static unsigned int tz = 521288629;
+    static unsigned int tw = 88675123;
+    unsigned int tt = (tx ^ (tx << 11));
+    tx = ty;
+    ty = tz;
+    tz = tw;
+    return (tw = (tw ^ (tw >> 19)) ^ (tt ^ (tt >> 8)));
+}
+
+uint64_t xorshift64() {
+    uint64_t high = static_cast<uint64_t>(xorshift());
+    uint64_t low = static_cast<int64_t>(xorshift());
+    return (high << 32) | low;
+}
+
+struct ZobristHash {
+    array<array<uint64_t, 8>, 256> board;  // マスの座標、色
+    array<array<uint64_t, 256>, 8> snake_pos;  // ヘビの頭からのインデックス、座標
+    array<uint64_t, 256> snake_len;  // ヘビの長さ
+
+    ZobristHash() {
+        for (int i = 0; i < 256; i++) {
+            for (int j = 0; j < 8; j++) {
+                board[i][j] = xorshift64();
+                snake_pos[j][i] = xorshift64();
+            }
+            snake_len[i] = xorshift64();
+        }
+    }
+};
+
 struct Vec2 {
     int x, y;
     auto operator<=>(const Vec2 &other) const = default;
@@ -77,35 +111,29 @@ Input read_input() {
     return in;
 }
 
-unsigned int xorshift() {
-    static unsigned int tx = 123456789;
-    static unsigned int ty = 362436069;
-    static unsigned int tz = 521288629;
-    static unsigned int tw = 88675123;
-    unsigned int tt = (tx ^ (tx << 11));
-    tx = ty;
-    ty = tz;
-    tz = tw;
-    return (tw = (tw ^ (tw >> 19)) ^ (tt ^ (tt >> 8)));
-}
-
 class State {
 private:
 
 public:
     int game_score;
     double evaluated_score;
+    uint64_t board_hash;
     array<int, 256> board;
     vector<int> snake_color;
     vector<char> actions;
     deque<Vec2> snake_pos;
 
-    State(const Input& in, const Param& param) {
+    State(const Input& in, const Param& param, const ZobristHash& hash) {
         board = in.f;
         snake_pos.resize(5);
         for (int i = 0; i < 5; i++) snake_pos[i] = {5 - i - 1, 0};
         snake_color.resize(5);
         for (int i = 0; i < 5; i++) snake_color[i] = 1;
+        
+        board_hash = 0;
+        for (int i = 0; i < 256; i++) {
+            board_hash ^= hash.board[i][board[i]];
+        }
 
         update(in, param);
     }
@@ -135,7 +163,7 @@ public:
         return true;
     }
 
-    void move(const Input& in, const Param& param, const char dir) {
+    void move(const Input& in, const Param& param, const ZobristHash& hash, const char dir) {
         // 移動
         Vec2 head = snake_pos.front();
         switch (dir) {
@@ -154,10 +182,14 @@ public:
         }
         snake_pos.emplace_front(head);
 
+
         // 食事
         if (board[head.x * in.N + head.y] == 0) {
             snake_pos.pop_back();
         } else {
+            board_hash ^= hash.board[head.x * in.N + head.y][board[head.x * in.N + head.y]];
+            board_hash ^= hash.board[head.x * in.N + head.y][0];
+
             snake_color.emplace_back(board[head.x * in.N + head.y]);
             board[head.x * in.N + head.y] = 0;
         }
@@ -166,6 +198,8 @@ public:
         for (int i = 1; i < ssize(snake_pos); i++) {
             if (head == snake_pos[i]) {
                 for (int j = i + 1; j < ssize(snake_pos); j++) {
+                    board_hash ^= hash.board[snake_pos[j].x * in.N + snake_pos[j].y][0];
+                    board_hash ^= hash.board[snake_pos[j].x * in.N + snake_pos[j].y][snake_color[j]];
                     board[snake_pos[j].x * in.N + snake_pos[j].y] = snake_color[j];
                 }
                 snake_color.erase(snake_color.begin() + i + 1, snake_color.end());
@@ -272,38 +306,36 @@ public:
         for (const auto a : actions) cout << a << "\n";
     }
 
-    uint64_t calc_hash() const {
-        uint64_t h = 0;
-        
-        h ^= (snake_pos[0].x * 31ULL + snake_pos[0].y) * 123456789ULL;
-        
-        h ^= (ssize(snake_color) * 10007ULL);
-        
-        for (int i = 1; i < min(static_cast<int>(ssize(snake_color)), 5); i++) {
-            h ^= (snake_pos[i].x * 15ULL + snake_pos[i].y) * (i * 987654321ULL);
+    uint64_t calc_hash(const Input& in, const ZobristHash& hash) const {
+        uint64_t h = board_hash;
+
+        h ^= hash.snake_len[ssize(snake_color)];
+
+        for (int i = 0; i < min(static_cast<int>(ssize(snake_color)), 8); i++) {
+            h ^= hash.snake_pos[i][snake_pos[i].x * in.N + snake_pos[i].y];
         }
-        
+
         return h;
     }
 };
 
-State simple_zigzag(const Input& in, const Param& param) {
-    State state(in, param);
+State simple_zigzag(const Input& in, const Param& param, const ZobristHash& hash) {
+    State state(in, param, hash);
     State best_state = state;
 
     for (int x = 4; x < in.N - 1; x++) {
-        state.move(in, param, 'D');
+        state.move(in, param, hash, 'D');
         if (state.game_score < best_state.game_score) best_state = state;
     }
 
     for (int y = 1; y < in.N; y++) {
-        state.move(in, param, 'R');
+        state.move(in, param, hash, 'R');
         if (state.game_score < best_state.game_score) best_state = state;
         if (y % 2 == 1) {
-            for (int x = 0; x < in.N - 1; x++) state.move(in, param, 'U');
+            for (int x = 0; x < in.N - 1; x++) state.move(in, param, hash, 'U');
             if (state.game_score < best_state.game_score) best_state = state;
         } else {
-            for (int x = 0; x < in.N - 1; x++) state.move(in, param, 'D');
+            for (int x = 0; x < in.N - 1; x++) state.move(in, param, hash, 'D');
             if (state.game_score < best_state.game_score) best_state = state;
         }
     }
@@ -311,10 +343,10 @@ State simple_zigzag(const Input& in, const Param& param) {
     return best_state;
 }
 
-State bfs_all_route(const Input& in, const Param& param) {
+State bfs_all_route(const Input& in, const Param& param, const ZobristHash& hash) {
     array<char, 4> dir{'U', 'D', 'L', 'R'};
 
-    State best_state(in, param);
+    State best_state(in, param, hash);
 
     queue<State> q;
     q.emplace(best_state);
@@ -328,7 +360,7 @@ State bfs_all_route(const Input& in, const Param& param) {
         for (const char d : dir) {
             if (!state.can_move(in, d)) continue;
             State next_state = state;
-            next_state.move(in, param, d);
+            next_state.move(in, param, hash, d);
             q.emplace(next_state);
         }
     }
@@ -336,15 +368,15 @@ State bfs_all_route(const Input& in, const Param& param) {
     return best_state;
 }
 
-State greedy(const Input& in, const Param& param, TimeKeeper& time_keeper) {
+State greedy(const Input& in, const Param& param, const ZobristHash& hash, TimeKeeper& time_keeper) {
     const array<char, 4> dir{'U', 'D', 'L', 'R'};
 
     const double reject_prob = 0.5 * in.M / (3.0 * in.N * in.N / 4.0);
 
-    State best_state(in, param);
+    State best_state(in, param, hash);
 
     while (!time_keeper.is_time_over()) {
-        State state(in, param);
+        State state(in, param, hash);
 
         for (int t = 0; ssize(state.snake_color) < in.M; t++) {
             int target_color = in.d[ssize(state.snake_color)];
@@ -422,7 +454,7 @@ State greedy(const Input& in, const Param& param, TimeKeeper& time_keeper) {
             }
             ranges::reverse(path);
 
-            for (const char p : path) state.move(in, param, p);
+            for (const char p : path) state.move(in, param, hash, p);
         }
 
         if (ssize(state.snake_color) != in.M) continue;
@@ -432,16 +464,16 @@ State greedy(const Input& in, const Param& param, TimeKeeper& time_keeper) {
     return best_state;
 }
 
-State custom_zigzag(const Input& in, const Param& param) {
-    State best_state(in, param);
+State custom_zigzag(const Input& in, const Param& param, const ZobristHash& hash) {
+    State best_state(in, param, hash);
 
-    State base_state(in, param);
-    for (int x = 4; x < in.N - 1; x++) base_state.move(in, param, 'D');
+    State base_state(in, param, hash);
+    for (int x = 4; x < in.N - 1; x++) base_state.move(in, param, hash, 'D');
 
     if (in.N % 2 == 0) {
         for (int bit = 0; bit < (1 << (in.N - 1)); bit++) {
             State state = base_state;
-            state.move(in, param, 'R');
+            state.move(in, param, hash, 'R');
             
             vector<bool> wall(in.N, false);
             for (int i = 0; i < in.N - 1; i++) {
@@ -459,44 +491,44 @@ State custom_zigzag(const Input& in, const Param& param) {
                 
                 if (start_left) {
                     for (int y = 1; y < in.N; y++) {
-                        if (y != 1) state.move(in, param, 'R');
+                        if (y != 1) state.move(in, param, hash, 'R');
                         if (ssize(state.snake_color) == in.M) break;
                         
                         if ((y - 1) % 2 == 0) {
                             for (int x = b; x > t; x--) {
-                                state.move(in, param, 'U');
+                                state.move(in, param, hash, 'U');
                                 if (ssize(state.snake_color) == in.M) break;
                             }
                         } else {
                             for (int x = t; x < b; x++) {
-                                state.move(in, param, 'D');
+                                state.move(in, param, hash, 'D');
                                 if (ssize(state.snake_color) == in.M) break;
                             }
                         }
                     }
                     curr_row = t - 1;
                     start_left = false;
-                    if (curr_row >= 0 && ssize(state.snake_color) != in.M) state.move(in, param, 'U');
+                    if (curr_row >= 0 && ssize(state.snake_color) != in.M) state.move(in, param, hash, 'U');
                 } else {
                     for (int y = in.N - 1; y >= 1; y--) {
-                        if (y != in.N - 1) state.move(in, param, 'L');
+                        if (y != in.N - 1) state.move(in, param, hash, 'L');
                         if (ssize(state.snake_color) == in.M) break;
                         
                         if ((in.N - 1 - y) % 2 == 0) {
                             for (int x = b; x > t; x--) {
-                                state.move(in, param, 'U');
+                                state.move(in, param, hash, 'U');
                                 if (ssize(state.snake_color) == in.M) break;
                             }
                         } else {
                             for (int x = t; x < b; x++) {
-                                state.move(in, param, 'D');
+                                state.move(in, param, hash, 'D');
                                 if (ssize(state.snake_color) == in.M) break;
                             }
                         }
                     }
                     curr_row = t - 1;
                     start_left = true;
-                    if (curr_row >= 0 && ssize(state.snake_color) != in.M) state.move(in, param, 'U');
+                    if (curr_row >= 0 && ssize(state.snake_color) != in.M) state.move(in, param, hash, 'U');
                 }
             }
 
@@ -505,7 +537,7 @@ State custom_zigzag(const Input& in, const Param& param) {
     } else {
         for (int bit = 0; bit < (1 << (in.N - 2)); bit++) {
             State state = base_state;
-            state.move(in, param, 'R');
+            state.move(in, param, hash, 'R');
             
             vector<bool> wall(in.N, false);
             for (int i = 0; i < in.N - 2; i++) {
@@ -523,44 +555,44 @@ State custom_zigzag(const Input& in, const Param& param) {
                 
                 if (start_bottom) {
                     for (int x = in.N - 1; x >= 0; x--) {
-                        if (x != in.N - 1) state.move(in, param, 'U');
+                        if (x != in.N - 1) state.move(in, param, hash, 'U');
                         if (ssize(state.snake_color) == in.M) break;
                         
                         if ((in.N - 1 - x) % 2 == 0) {
                             for (int y = l; y < r; y++) {
-                                state.move(in, param, 'R');
+                                state.move(in, param, hash, 'R');
                                 if (ssize(state.snake_color) == in.M) break;
                             }
                         } else {
                             for (int y = r; y > l; y--) {
-                                state.move(in, param, 'L');
+                                state.move(in, param, hash, 'L');
                                 if (ssize(state.snake_color) == in.M) break;
                             }
                         }
                     }
                     curr_col = r + 1;
                     start_bottom = false;
-                    if (curr_col < in.N && ssize(state.snake_color) != in.M) state.move(in, param, 'R');
+                    if (curr_col < in.N && ssize(state.snake_color) != in.M) state.move(in, param, hash, 'R');
                 } else {
                     for (int x = 0; x < in.N; x++) {
-                        if (x != 0) state.move(in, param, 'D');
+                        if (x != 0) state.move(in, param, hash, 'D');
                         if (ssize(state.snake_color) == in.M) break;
                         
                         if (x % 2 == 0) {
                             for (int y = l; y < r; y++) {
-                                state.move(in, param, 'R');
+                                state.move(in, param, hash, 'R');
                                 if (ssize(state.snake_color) == in.M) break;
                             }
                         } else {
                             for (int y = r; y > l; y--) {
-                                state.move(in, param, 'L');
+                                state.move(in, param, hash, 'L');
                                 if (ssize(state.snake_color) == in.M) break;
                             }
                         }
                     }
                     curr_col = r + 1;
                     start_bottom = true;
-                    if (curr_col < in.N && ssize(state.snake_color) != in.M) state.move(in, param, 'R');
+                    if (curr_col < in.N && ssize(state.snake_color) != in.M) state.move(in, param, hash, 'R');
                 }
             }
 
@@ -571,10 +603,10 @@ State custom_zigzag(const Input& in, const Param& param) {
     return best_state;
 }
 
-State beam_search(const Input& in, const Param& param, TimeKeeper& time_keeper, const int beam_width) {
+State beam_search(const Input& in, const Param& param, const ZobristHash& hash, TimeKeeper& time_keeper, const int beam_width) {
     const array<char, 4> dir{'U', 'D', 'L', 'R'};
 
-    State best_state(in, param);
+    State best_state(in, param, hash);
 
     priority_queue<State> curr_beam;
     curr_beam.emplace(best_state);
@@ -604,13 +636,13 @@ State beam_search(const Input& in, const Param& param, TimeKeeper& time_keeper, 
                 if (!state.can_move(in, d)) continue;
 
                 State next_state = state;
-                next_state.move(in, param, d);
+                next_state.move(in, param, hash, d);
 
-                const uint64_t hash = next_state.calc_hash();
-                if (seen_hash.contains(hash)) continue;
+                uint64_t h = next_state.calc_hash(in, hash);
+                if (seen_hash.contains(h)) continue;
 
                 next_beam.emplace(next_state);
-                seen_hash.emplace(hash);
+                seen_hash.emplace(h);
 
                 if (next_state.game_score < best_state.game_score) best_state = next_state;
             }
@@ -631,10 +663,10 @@ int main() {
     TimeKeeper time_keeper(TIME_LIMIT);
 
     const Param param;
-
+    const ZobristHash hash;
     const Input in = read_input();
 
-    State best_state(in, param);
+    State best_state(in, param, hash);
     
     // State zigzag_state = custom_zigzag(in);
     // if (zigzag_state.game_score < best_state.game_score) best_state = zigzag_state;
@@ -643,7 +675,7 @@ int main() {
     // if (greedy_state.game_score < best_state.game_score) best_state = greedy_state;
 
     constexpr int BEAM_WIDTH = 30;
-    State beam_state = beam_search(in, param, time_keeper, BEAM_WIDTH);
+    State beam_state = beam_search(in, param, hash, time_keeper, BEAM_WIDTH);
     if (beam_state.game_score < best_state.game_score) best_state = beam_state;
     
     best_state.print_actions();
