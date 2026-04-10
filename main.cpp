@@ -349,7 +349,6 @@ State greedy(const Input& in, const Param& param, const ZobristHash& hash, TimeK
             const int start_pos = state.snake_pos[0];
             int target_pos = -1;
 
-            // vector<vector<int>> dist(in.N, vector<int>(in.N, -1));
             array<int, 256> dist;
             ranges::fill(dist, -1);
             dist[start_pos] = 0;
