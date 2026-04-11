@@ -129,6 +129,8 @@ public:
     array<int, 256> snake_color;
     vector<char> actions;
 
+    State() {}
+
     State(const Input& in, const Param& param, const ZobristHash& hash) {
         board = in.f;
         snake_len = 5;
@@ -221,7 +223,7 @@ public:
         update(in, param);
     }
 
-    bool is_finished(const Input& in) {
+    bool is_finished(const Input& in) const {
         if (snake_len != in.M) return false;
         for (int i = 0; i < snake_len; i++) {
             if (snake_color[i] != in.d[i]) return false;
@@ -589,8 +591,9 @@ State beam_search(const Input& in, const Param& param, const ZobristHash& hash, 
 
     State best_state(in, param, hash);
 
-    priority_queue<State> curr_beam;
-    curr_beam.emplace(best_state);
+    vector<State> curr_beam;
+    curr_beam.reserve(beam_width);
+    curr_beam.emplace_back(best_state);
 
     unordered_map<uint64_t, double> seen_hash;
     seen_hash[best_state.calc_hash(in, hash)] = best_state.evaluated_score;
@@ -602,17 +605,12 @@ State beam_search(const Input& in, const Param& param, const ZobristHash& hash, 
 
         if (curr_beam.empty()) break;
 
-        priority_queue<State> next_beam;
+        vector<State> next_beam;
         bool all_finished = true;
 
-        for (int i = 0; i < beam_width; i++) {
-            if (curr_beam.empty()) break;
-
-            State state = curr_beam.top();
-            curr_beam.pop();
-
+        for (const State& state : curr_beam) {
             if (state.is_finished(in)) {
-                next_beam.emplace(state);
+                next_beam.emplace_back(state);
                 continue;
             }
 
@@ -627,18 +625,22 @@ State beam_search(const Input& in, const Param& param, const ZobristHash& hash, 
                 uint64_t h = next_state.calc_hash(in, hash);
                 if (seen_hash.contains(h) && seen_hash[h] >= next_state.evaluated_score) continue;
 
-                next_beam.emplace(next_state);
+                next_beam.emplace_back(next_state);
                 seen_hash[h] = next_state.evaluated_score;
 
                 if (next_state.game_score < best_state.game_score) best_state = next_state;
             }
         }
 
-        curr_beam = next_beam;
-
-        if (curr_beam.top().game_score < best_state.game_score) best_state = curr_beam.top();
-
         if (all_finished) break;
+
+        if (ssize(next_beam) > beam_width) {
+            nth_element(next_beam.begin(), next_beam.begin() + beam_width, next_beam.end(), [](const State& a, const State& b) { return a.evaluated_score > b.evaluated_score; });
+            
+            next_beam.resize(beam_width);
+        }
+
+        curr_beam = move(next_beam);
     }
 
     cerr << "iteration: " << iter << endl;
