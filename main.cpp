@@ -17,14 +17,14 @@ struct Param {
             return default_val;
         };
 
-        w_streak = get_env("STREAK", 754.0);
-        w_wrong = get_env("WRONG", -100.3);
-        w_turn = get_env("TURN", -59.03);
-        w_dist = get_env("DIST", -26.02);
-        w_streak_m = get_env("STREAK_M", 1298.6);
-        w_wrong_m = get_env("WRONG_M", -1370.2);
-        w_turn_m = get_env("TURN_M", -44.52);
-        w_dist_m = get_env("DIST_M", -65.09);
+        w_streak = get_env("STREAK", 204.98);
+        w_wrong = get_env("WRONG", -542.55);
+        w_turn = get_env("TURN", -8.955);
+        w_dist = get_env("DIST", -8.313);
+        w_streak_m = get_env("STREAK_M", 998.02);
+        w_wrong_m = get_env("WRONG_M", -1021.07);
+        w_turn_m = get_env("TURN_M", -2.965);
+        w_dist_m = get_env("DIST_M", -60.292);
     }
 };
 
