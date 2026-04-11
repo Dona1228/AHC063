@@ -17,14 +17,14 @@ struct Param {
             return default_val;
         };
 
-        w_streak = get_env("STREAK", 204.98);
-        w_wrong = get_env("WRONG", -542.55);
-        w_turn = get_env("TURN", -8.955);
-        w_dist = get_env("DIST", -8.313);
-        w_streak_m = get_env("STREAK_M", 998.02);
-        w_wrong_m = get_env("WRONG_M", -1021.07);
-        w_turn_m = get_env("TURN_M", -2.965);
-        w_dist_m = get_env("DIST_M", -60.292);
+        w_streak = get_env("STREAK", 953.77);
+        w_wrong = get_env("WRONG", -280.27);
+        w_turn = get_env("TURN", -63.667);
+        w_dist = get_env("DIST", -43.571);
+        w_streak_m = get_env("STREAK_M", 5465.9);
+        w_wrong_m = get_env("WRONG_M", -5523.8);
+        w_turn_m = get_env("TURN_M", -95.129);
+        w_dist_m = get_env("DIST_M", -96.221);
     }
 };
 
@@ -592,13 +592,14 @@ State beam_search(const Input& in, const Param& param, const ZobristHash& hash, 
     priority_queue<State> curr_beam;
     curr_beam.emplace(best_state);
 
+    unordered_map<uint64_t, double> seen_hash;
+    seen_hash[best_state.calc_hash(in, hash)] = best_state.evaluated_score;
+
     while (!time_keeper.is_time_over()) {
         if (curr_beam.empty()) break;
 
         priority_queue<State> next_beam;
         bool all_finished = true;
-
-        unordered_set<uint64_t> seen_hash;
 
         for (int i = 0; i < beam_width; i++) {
             if (curr_beam.empty()) break;
@@ -620,10 +621,10 @@ State beam_search(const Input& in, const Param& param, const ZobristHash& hash, 
                 next_state.move(in, param, hash, d);
 
                 uint64_t h = next_state.calc_hash(in, hash);
-                if (seen_hash.contains(h)) continue;
+                if (seen_hash.contains(h) && seen_hash[h] >= next_state.evaluated_score) continue;
 
                 next_beam.emplace(next_state);
-                seen_hash.emplace(h);
+                seen_hash[h] = next_state.evaluated_score;
 
                 if (next_state.game_score < best_state.game_score) best_state = next_state;
             }
