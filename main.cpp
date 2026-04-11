@@ -595,7 +595,11 @@ State beam_search(const Input& in, const Param& param, const ZobristHash& hash, 
     unordered_map<uint64_t, double> seen_hash;
     seen_hash[best_state.calc_hash(in, hash)] = best_state.evaluated_score;
 
-    while (!time_keeper.is_time_over()) {
+    int iter = 1;
+
+    while (iter++) {
+        if (iter % 100 == 0 && time_keeper.is_time_over()) break;
+
         if (curr_beam.empty()) break;
 
         priority_queue<State> next_beam;
@@ -637,11 +641,12 @@ State beam_search(const Input& in, const Param& param, const ZobristHash& hash, 
         if (all_finished) break;
     }
 
+    cerr << "iteration: " << iter << endl;
     return best_state;
 }
 
 int main() {
-    constexpr int TIME_LIMIT = 1950;
+    constexpr int TIME_LIMIT = 1800;
     TimeKeeper time_keeper(TIME_LIMIT);
 
     const Param param;
