@@ -87,6 +87,11 @@ public:
     }
 };
 
+struct Node {
+    int parent;
+    char action;
+};
+
 struct Input {
     int N;  // 盤面サイズ
     int M;  // 好みの色列の長さ
@@ -121,19 +126,23 @@ private:
 
 public:
     int snake_len;
+    int turn;
+    int action_idx;
     int game_score;
     double evaluated_score;
     uint64_t board_hash;
     array<int, 256> board;
     array<int, 256> snake_pos;
     array<int, 256> snake_color;
-    vector<char> actions;
 
     State() {}
 
     State(const Input& in, const Param& param, const ZobristHash& hash) {
         board = in.f;
         snake_len = 5;
+        turn = 0;
+        action_idx = -1;
+
         for (int i = 0; i < 5; i++) {
             snake_pos[i] = (5 - i - 1) * in.N + 0;
             snake_color[i] = 1;
@@ -219,7 +228,7 @@ public:
             }
         }
 
-        actions.emplace_back(dir);
+        turn++;
         update(in, param);
     }
 
@@ -236,7 +245,7 @@ public:
         for (int i = 0; i < snake_len; i++) {
             if (snake_color[i] != in.d[i]) error++;
         }
-        game_score = ssize(actions) + 10000 * (error + 2 * (in.M - snake_len));
+        game_score = turn + 10000 * (error + 2 * (in.M - snake_len));
     }
 
     void calc_evaluated_score(const Input& in, const Param& param) {
@@ -247,8 +256,6 @@ public:
         }
 
         int wrong = snake_len - streak;
-
-        int turn = ssize(actions);
         
         // 目的の色までのマンハッタン距離を求める
         int min_dist = in.N * in.N;
@@ -275,10 +282,6 @@ public:
     void update(const Input& in, const Param& param) {
         calc_game_score(in);
         calc_evaluated_score(in, param);
-    }
-
-    void print_actions() {
-        for (const auto a : actions) cout << a << "\n";
     }
 
     uint64_t calc_hash(const Input& in, const ZobristHash& hash) const {
@@ -586,8 +589,11 @@ State custom_zigzag(const Input& in, const Param& param, const ZobristHash& hash
     return best_state;
 }
 
-State beam_search(const Input& in, const Param& param, const ZobristHash& hash, TimeKeeper& time_keeper, const int beam_width) {
+vector<char> beam_search(const Input& in, const Param& param, const ZobristHash& hash, TimeKeeper& time_keeper, const int beam_width) {
     const array<char, 4> dir{'U', 'D', 'L', 'R'};
+
+    vector<Node> actions;
+    actions.reserve(1000000);
 
     State best_state(in, param, hash);
 
@@ -622,6 +628,9 @@ State beam_search(const Input& in, const Param& param, const ZobristHash& hash, 
                 State next_state = state;
                 next_state.move(in, param, hash, d);
 
+                next_state.action_idx = ssize(actions);
+                actions.emplace_back(state.action_idx, d);
+
                 uint64_t h = next_state.calc_hash(in, hash);
                 if (seen_hash.contains(h) && seen_hash[h] >= next_state.evaluated_score) continue;
 
@@ -644,7 +653,17 @@ State beam_search(const Input& in, const Param& param, const ZobristHash& hash, 
     }
 
     cerr << "iteration: " << iter << endl;
-    return best_state;
+    
+    vector<char> best_actions;
+    int curr = best_state.action_idx;
+    while (curr != -1) {
+        best_actions.emplace_back(actions[curr].action);
+        curr = actions[curr].parent;
+    }
+    ranges::reverse(best_actions);
+
+    return best_actions;
+
 }
 
 int main() {
@@ -664,10 +683,8 @@ int main() {
     // if (greedy_state.game_score < best_state.game_score) best_state = greedy_state;
 
     constexpr int BEAM_WIDTH = 100;
-    State beam_state = beam_search(in, param, hash, time_keeper, BEAM_WIDTH);
-    if (beam_state.game_score < best_state.game_score) best_state = beam_state;
-    
-    best_state.print_actions();
+    vector<char> actions = beam_search(in, param, hash, time_keeper, BEAM_WIDTH);
+    for (const char a : actions) cout << a << "\n";
 
     return 0;
 }
