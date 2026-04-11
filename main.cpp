@@ -598,7 +598,7 @@ State beam_search(const Input& in, const Param& param, const ZobristHash& hash, 
     int iter = 1;
 
     while (iter++) {
-        if (iter % 100 == 0 && time_keeper.is_time_over()) break;
+        if (iter % 10 == 0 && time_keeper.is_time_over()) break;
 
         if (curr_beam.empty()) break;
 
