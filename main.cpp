@@ -41,8 +41,8 @@ unsigned int xorshift() {
 }
 
 uint64_t xorshift64() {
-    uint64_t high = static_cast<uint64_t>(xorshift());
-    uint64_t low = static_cast<int64_t>(xorshift());
+    const uint64_t high = static_cast<uint64_t>(xorshift());
+    const uint64_t low = static_cast<int64_t>(xorshift());
     return (high << 32) | low;
 }
 
@@ -100,8 +100,8 @@ struct Input {
     array<int, 256> f;  // 初期状態において各マスに置かれている餌の色
 
     bool is_in_grid(const int pos) const {
-        int x = pos / N;
-        int y = pos % N;
+        const int x = pos / N;
+        const int y = pos % N;
         return 0 <= x && x < N && 0 <= y && y < N;
     }
 };
@@ -255,18 +255,18 @@ public:
             streak++;
         }
 
-        int wrong = snake_len - streak;
+        const int wrong = snake_len - streak;
         
         // 目的の色までのマンハッタン距離を求める
         int min_dist = in.N * in.N;
         if (streak < in.M) {
-            int target_color = in.d[streak];
-            int curr_pos = snake_pos[0];
+            const int target_color = in.d[streak];
+            const int curr_pos = snake_pos[0];
             
             for (int x = 0; x < in.N; ++x) {
                 for (int y = 0; y < in.N; ++y) {
                     if (board[x * in.N + y] == target_color) {
-                        int d = abs(x - curr_pos / in.N) + abs(y - curr_pos % in.N);
+                        const int d = abs(x - curr_pos / in.N) + abs(y - curr_pos % in.N);
                         if (d < min_dist) min_dist = d;
                     }
                 }
@@ -305,7 +305,7 @@ public:
 };
 
 vector<char> beam_search(const Input& in, const Param& param, const ZobristHash& hash, TimeKeeper& time_keeper, const int beam_width) {
-    const array<char, 4> dir{'U', 'D', 'L', 'R'};
+    constexpr array<char, 4> dir{'U', 'D', 'L', 'R'};
 
     vector<Node> actions;
     actions.reserve(1000000);
@@ -346,7 +346,7 @@ vector<char> beam_search(const Input& in, const Param& param, const ZobristHash&
                 next_state.action_idx = ssize(actions);
                 actions.emplace_back(state.action_idx, d);
 
-                uint64_t h = next_state.calc_hash(in, hash);
+                const uint64_t h = next_state.calc_hash(in, hash);
                 if (seen_hash.contains(h) && seen_hash[h] >= next_state.evaluated_score) continue;
 
                 next_beam.emplace_back(next_state);
@@ -390,7 +390,7 @@ int main() {
     State best_state(in, param, hash);
 
     constexpr int BEAM_WIDTH = 100;
-    vector<char> actions = beam_search(in, param, hash, time_keeper, BEAM_WIDTH);
+    const vector<char> actions = beam_search(in, param, hash, time_keeper, BEAM_WIDTH);
     for (const char a : actions) cout << a << "\n";
 
     return 0;
