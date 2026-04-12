@@ -249,3 +249,9 @@
         - best params = {'streak': 1148.6310, 'wrong': -145.6768, 'turn': -68.9185, 'dist': -94.6722, 'streak_m': 9503.1988, 'wrong_m': -7898.7681, 'turn_m': -31.3595, 'dist_m': -195.7998}
         - best score  = 7560.8630
         - parameter importances = {'wrong_m': 0.3556, 'streak_m': 0.1547, 'wrong': 0.1387, 'streak': 0.1211, 'dist_m': 0.0817, 'turn': 0.0706, 'dist': 0.0401, 'turn_m': 0.0375}
+
+## 4/12
+- TLEしていたので、ビームサーチの中で時間制限をチェックする箇所を増やした
+- デバッグ出力を見てactionsとseen_hashのreserveを設定
+- 実行時間制限を調整
+    - 1800 msを1850 msにしただけで安定するようになったので、細かい高速化による伸びしろがまだある

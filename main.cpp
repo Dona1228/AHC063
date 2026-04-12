@@ -308,7 +308,7 @@ vector<char> beam_search(const Input& in, const Param& param, const ZobristHash&
     constexpr array<char, 4> dir{'U', 'D', 'L', 'R'};
 
     vector<Node> actions;
-    actions.reserve(1000000);
+    actions.reserve(2000000);
 
     State best_state(in, param, hash);
 
@@ -317,19 +317,20 @@ vector<char> beam_search(const Input& in, const Param& param, const ZobristHash&
     curr_beam.emplace_back(best_state);
 
     unordered_map<uint64_t, double> seen_hash;
+    seen_hash.reserve(2000000);
     seen_hash[best_state.calc_hash(in, hash)] = best_state.evaluated_score;
 
-    int iter = 1;
-
-    while (iter++) {
-        if (time_keeper.is_time_over()) break;
-
+    while (!time_keeper.is_time_over()) {
         if (curr_beam.empty()) break;
 
         vector<State> next_beam;
         bool all_finished = true;
+        int iter = 0;
 
         for (const State& state : curr_beam) {
+            iter++;
+            if (iter % 10 == 0 && time_keeper.is_time_over()) break;
+
             if (state.is_finished(in)) {
                 next_beam.emplace_back(state);
                 continue;
@@ -375,12 +376,15 @@ vector<char> beam_search(const Input& in, const Param& param, const ZobristHash&
     }
     ranges::reverse(best_actions);
 
+    // cerr << "actions size: " << ssize(actions) << "\n";
+    // cerr << "seen_hash size: " << ssize(seen_hash) << "\n";
+
     return best_actions;
 
 }
 
 int main() {
-    constexpr int TIME_LIMIT = 1800;
+    constexpr int TIME_LIMIT = 1850;
     TimeKeeper time_keeper(TIME_LIMIT);
 
     const Param param;
