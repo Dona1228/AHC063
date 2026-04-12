@@ -2,14 +2,14 @@
 using namespace std;
 
 struct Param {
-    // static constexpr double w_streak = 1931.4615;
-    // static constexpr double w_wrong = -697.1454;
-    // static constexpr double w_turn = -28.0261;
-    // static constexpr double w_dist = -49.0372;
-    // static constexpr double w_streak_m = 15520.9140;
-    // static constexpr double w_wrong_m = -15183.3802;
-    // static constexpr double w_turn_m = -163.5810;
-    // static constexpr double w_dist_m = -57.9808;
+    // static constexpr double w_streak = 1313.5779;
+    // static constexpr double w_wrong = -893.7901;
+    // static constexpr double w_turn = -192.7953;
+    // static constexpr double w_dist = -73.5842;
+    // static constexpr double w_streak_m = 32460.6082;
+    // static constexpr double w_wrong_m = -16174.6179;
+    // static constexpr double w_turn_m = -183.4955;
+    // static constexpr double w_dist_m = -137.2489;
 
     double w_streak;
     double w_wrong;
@@ -26,14 +26,14 @@ struct Param {
             return default_val;
         };
 
-        w_streak = get_env("STREAK", 1931.4615);
-        w_wrong = get_env("WRONG", -697.1454);
-        w_turn = get_env("TURN", -28.0261);
-        w_dist = get_env("DIST", -49.0372);
-        w_streak_m = get_env("STREAK_M", 15520.9140);
-        w_wrong_m = get_env("WRONG_M", -15183.3802);
-        w_turn_m = get_env("TURN_M", -163.5810);
-        w_dist_m = get_env("DIST_M", -57.9808);
+        w_streak = get_env("STREAK", 1313.5779);
+        w_wrong = get_env("WRONG", -893.7901);
+        w_turn = get_env("TURN", -192.7953);
+        w_dist = get_env("DIST", -73.5842);
+        w_streak_m = get_env("STREAK_M", 32460.6082);
+        w_wrong_m = get_env("WRONG_M", -16174.6179);
+        w_turn_m = get_env("TURN_M", -183.4955);
+        w_dist_m = get_env("DIST_M", -137.2489);
     }
 };
 
