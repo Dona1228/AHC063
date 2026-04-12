@@ -101,6 +101,39 @@ struct Node {
     char action;
 };
 
+// unordered_mapの代わり
+class HashTable {
+private:
+    struct Entry {
+        uint64_t key;
+        double val;
+    };
+    vector<Entry> table;
+    uint32_t mask;
+
+public:
+    HashTable(int capacity_pow2) {
+        table.assign(1 << capacity_pow2, {0, -1e18});
+        mask = (1 << capacity_pow2) - 1;
+    }
+    
+    bool is_worse_or_equal(uint64_t key, double val) {
+        if (key == 0) key = 1;
+        uint32_t idx = key & mask;
+        while (table[idx].key != 0 && table[idx].key != key) {
+            idx = (idx + 1) & mask;
+        }
+        if (table[idx].key == key) {
+            if (table[idx].val >= val) return true;
+            table[idx].val = val;
+            return false;
+        }
+        table[idx].key = key;
+        table[idx].val = val;
+        return false;
+    }
+};
+
 struct Input {
     int N;  // 盤面サイズ
     int M;  // 好みの色列の長さ
@@ -298,20 +331,16 @@ vector<char> beam_search(const Input& in, const Param& param, const ZobristHash&
     curr_beam.reserve(beam_width);
     curr_beam.emplace_back(best_state);
 
-    unordered_map<uint64_t, double> seen_hash;
-    seen_hash.reserve(2000000);
-    seen_hash[best_state.calc_hash(hash)] = best_state.evaluated_score;
+    HashTable seen_hash(22);
+    seen_hash.is_worse_or_equal(best_state.calc_hash(hash), best_state.evaluated_score);
 
     while (!time_keeper.is_time_over()) {
         if (curr_beam.empty()) break;
 
         vector<State> next_beam;
         bool all_finished = true;
-        int iter = 0;
 
         for (const State& state : curr_beam) {
-            iter++;
-            if (iter % 10 == 0 && time_keeper.is_time_over()) break;
 
             if (state.is_finished(in)) {
                 next_beam.emplace_back(state);
@@ -329,10 +358,8 @@ vector<char> beam_search(const Input& in, const Param& param, const ZobristHash&
                 actions.emplace_back(state.action_idx, d);
 
                 const uint64_t h = next_state.calc_hash(hash);
-                if (seen_hash.contains(h) && seen_hash[h] >= next_state.evaluated_score) continue;
-
+                if (seen_hash.is_worse_or_equal(h, next_state.evaluated_score)) continue;
                 next_beam.emplace_back(next_state);
-                seen_hash[h] = next_state.evaluated_score;
 
                 if (next_state.game_score < best_state.game_score) best_state = next_state;
             }
@@ -361,7 +388,7 @@ vector<char> beam_search(const Input& in, const Param& param, const ZobristHash&
 }
 
 int main() {
-    constexpr int TIME_LIMIT = 1750;
+    constexpr int TIME_LIMIT = 1900;
     TimeKeeper time_keeper(TIME_LIMIT);
 
     const Param param;
