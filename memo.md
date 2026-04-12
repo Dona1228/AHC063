@@ -241,3 +241,11 @@
 - Stateクラスのメンバ変数からactionsを排除
     - わずかに悪化？
     - ビーム幅増やしたら変わるかも
+    - ビーム幅300でOptunaを回してみる
+        - best params = {'streak': 718.9414345018056, 'wrong': -826.4069707187408, 'turn': -59.83721636999039, 'dist': -69.43078278784058, 'streak_m': 5087.170470212074, 'wrong_m': -4543.6797572426185, 'turn_m': -18.775871480697983, 'dist_m': -187.91561453688672}
+        - best score  = 96229.20466666667
+        - parameter importances = {'wrong_m': 0.2688,'turn': 0.1998,'dist_m': 0.1747,'turn_m': 0.1123,'wrong': 0.0646,'streak': 0.0635,'streak_m': 0.0611,'dist': 0.0552}
+    - ビーム幅は100に戻して少し回す
+        - best params = {'streak': 1148.6310, 'wrong': -145.6768, 'turn': -68.9185, 'dist': -94.6722, 'streak_m': 9503.1988, 'wrong_m': -7898.7681, 'turn_m': -31.3595, 'dist_m': -195.7998}
+        - best score  = 7560.8630
+        - parameter importances = {'wrong_m': 0.3556, 'streak_m': 0.1547, 'wrong': 0.1387, 'streak': 0.1211, 'dist_m': 0.0817, 'turn': 0.0706, 'dist': 0.0401, 'turn_m': 0.0375}

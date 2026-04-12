@@ -17,14 +17,14 @@ struct Param {
             return default_val;
         };
 
-        w_streak = get_env("STREAK", 862.08);
-        w_wrong = get_env("WRONG", -200.56);
-        w_turn = get_env("TURN", -1.7436);
-        w_dist = get_env("DIST", -34.268);
-        w_streak_m = get_env("STREAK_M", 1914.3);
-        w_wrong_m = get_env("WRONG_M", -1767.1);
-        w_turn_m = get_env("TURN_M", -76.748);
-        w_dist_m = get_env("DIST_M", -34.015);
+        w_streak = get_env("STREAK", 1148.6310);
+        w_wrong = get_env("WRONG", -145.6768);
+        w_turn = get_env("TURN", -68.9185);
+        w_dist = get_env("DIST", -94.6722);
+        w_streak_m = get_env("STREAK_M", 9503.1988);
+        w_wrong_m = get_env("WRONG_M", -7898.7681);
+        w_turn_m = get_env("TURN_M", -31.3595);
+        w_dist_m = get_env("DIST_M", -195.7998);
     }
 };
 
@@ -322,7 +322,7 @@ vector<char> beam_search(const Input& in, const Param& param, const ZobristHash&
     int iter = 1;
 
     while (iter++) {
-        if (iter % 10 == 0 && time_keeper.is_time_over()) break;
+        if (time_keeper.is_time_over()) break;
 
         if (curr_beam.empty()) break;
 

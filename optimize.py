@@ -125,13 +125,23 @@ study = optuna.create_study(
     sampler=optuna.samplers.TPESampler(),
 )
 
+study.enqueue_trial({
+    "streak": 862.08,
+    "wrong": -200.56,
+    "turn": -1.7436,
+    "dist": -34.268,
+    "streak_m": 1914.3,
+    "wrong_m": -1767.1,
+    "turn_m": -76.748,
+    "dist_m": -34.015
+})
+
 run_optimization(study)
 
-print(f"best params = {study.best_params}")
-print(f"best score  = {study.best_value}")
+formatted_best_params = ", ".join([f"'{k}': {v:.4f}" for k, v in study.best_params.items()])
+print(f"best params = {{{formatted_best_params}}}")
+print(f"best score  = {study.best_value:.4f}")
 
 importances = optuna.importance.get_param_importances(study)
-print('parameter importances = {', end="")
-for param, importance in importances.items():
-    print(f"'{param}': {importance:.4f}", end=",")
-print('}')
+formatted_importances = ", ".join([f"'{k}': {v:.4f}" for k, v in importances.items()])
+print(f"parameter importances = {{{formatted_importances}}}")
