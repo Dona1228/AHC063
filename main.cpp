@@ -300,7 +300,7 @@ vector<char> beam_search(const Input& in, const Param& param, const ZobristHash&
 
     unordered_map<uint64_t, double> seen_hash;
     seen_hash.reserve(2000000);
-    seen_hash[best_state.calc_hash(in, hash)] = best_state.evaluated_score;
+    seen_hash[best_state.calc_hash(hash)] = best_state.evaluated_score;
 
     while (!time_keeper.is_time_over()) {
         if (curr_beam.empty()) break;
@@ -328,7 +328,7 @@ vector<char> beam_search(const Input& in, const Param& param, const ZobristHash&
                 next_state.action_idx = ssize(actions);
                 actions.emplace_back(state.action_idx, d);
 
-                const uint64_t h = next_state.calc_hash(in, hash);
+                const uint64_t h = next_state.calc_hash(hash);
                 if (seen_hash.contains(h) && seen_hash[h] >= next_state.evaluated_score) continue;
 
                 next_beam.emplace_back(next_state);
