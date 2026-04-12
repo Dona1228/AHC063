@@ -392,7 +392,7 @@ vector<char> beam_search(const Input& in, const Param& param, const ZobristHash&
 }
 
 int main() {
-    constexpr int TIME_LIMIT = 1800;
+    constexpr int TIME_LIMIT = 1750;
     TimeKeeper time_keeper(TIME_LIMIT);
 
     const Param param;
