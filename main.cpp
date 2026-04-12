@@ -105,8 +105,8 @@ struct Input {
     int N;  // 盤面サイズ
     int M;  // 好みの色列の長さ
     int C;  // 色数
-    array<int, 256> d;  // 好みの色列
-    array<int, 256> f;  // 初期状態において各マスに置かれている餌の色
+    array<int16_t, 256> d;  // 好みの色列
+    array<int16_t, 256> f;  // 初期状態において各マスに置かれている餌の色
 
     bool is_in_grid(const int pos) const {
         const int x = pos / N;
@@ -140,9 +140,9 @@ public:
     int game_score;
     double evaluated_score;
     uint64_t board_hash;
-    array<int, 256> board;
-    array<int, 256> snake_pos;
-    array<int, 256> snake_color;
+    array<int16_t, 256> board;
+    array<int16_t, 256> snake_pos;
+    array<int16_t, 256> snake_color;
 
     State() {}
 
