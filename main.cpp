@@ -387,6 +387,11 @@ vector<char> beam_search(const Input& in, const Param& param, const ZobristHash&
     return best_actions;
 }
 
+int choose_beam_width(const Input& in) {
+    if (in.M < 100) return 300;
+    else return 100;
+}
+
 int main() {
     constexpr int TIME_LIMIT = 1900;
     TimeKeeper time_keeper(TIME_LIMIT);
@@ -395,8 +400,8 @@ int main() {
     const ZobristHash hash;
     const Input in = read_input();
 
-    constexpr int BEAM_WIDTH = 100;
-    const vector<char> actions = beam_search(in, param, hash, time_keeper, BEAM_WIDTH);
+    const int beam_width = choose_beam_width(in);
+    const vector<char> actions = beam_search(in, param, hash, time_keeper, beam_width);
     for (const char a : actions) cout << a << "\n";
 
     return 0;
