@@ -131,10 +131,9 @@ Input read_input() {
 }
 
 class State {
-private:
-
 public:
     int snake_len;
+    int streak;
     int turn;
     int action_idx;
     int game_score;
@@ -162,7 +161,7 @@ public:
             board_hash ^= hash.board[i][board[i]];
         }
 
-        update(in, param);
+        calc_score(in, param);
     }
 
     bool operator<(const State& other) const {
@@ -198,18 +197,10 @@ public:
         // 移動
         int head = snake_pos[0];
         switch (dir) {
-            case ('U'):
-                head -= in.N;
-                break;
-            case ('D'):
-                head += in.N;
-                break;
-            case ('L'):
-                head--;
-                break;
-            case ('R'):
-                head++;
-                break;
+            case ('U'): head -= in.N; break;
+            case ('D'): head += in.N; break;
+            case ('L'): head--; break;
+            case ('R'): head++; break;
         }
         for (int i = snake_len; i > 0; i--) snake_pos[i] = snake_pos[i - 1];
         snake_pos[0] = head;
@@ -238,32 +229,28 @@ public:
         }
 
         turn++;
-        update(in, param);
+        calc_score(in, param);
     }
 
     bool is_finished(const Input& in) const {
-        if (snake_len != in.M) return false;
-        for (int i = 0; i < snake_len; i++) {
-            if (snake_color[i] != in.d[i]) return false;
-        }
-        return true;
+        return snake_len == in.M && streak == in.M;
     }
 
-    void calc_game_score(const Input& in) {
+    void calc_score(const Input& in, const Param& param) {
+        streak = 0;
         int error = 0;
+        bool is_streaking = true;
+        
         for (int i = 0; i < snake_len; i++) {
-            if (snake_color[i] != in.d[i]) error++;
+            if (snake_color[i] != in.d[i]) {
+                error++;
+                is_streaking = false;
+            } else if (is_streaking) {
+                streak++;
+            }
         }
+        
         game_score = turn + 10000 * (error + 2 * (in.M - snake_len));
-    }
-
-    void calc_evaluated_score(const Input& in, const Param& param) {
-        int streak = 0;
-        for (int i = 0; i < snake_len; i++) {
-            if (snake_color[i] != in.d[i]) break;
-            streak++;
-        }
-
         const int wrong = snake_len - streak;
         
         // 目的の色までのマンハッタン距離を求める
@@ -272,8 +259,8 @@ public:
             const int target_color = in.d[streak];
             const int curr_pos = snake_pos[0];
             
-            for (int x = 0; x < in.N; ++x) {
-                for (int y = 0; y < in.N; ++y) {
+            for (int x = 0; x < in.N; x++) {
+                for (int y = 0; y < in.N; y++) {
                     if (board[x * in.N + y] == target_color) {
                         const int d = abs(x - curr_pos / in.N) + abs(y - curr_pos % in.N);
                         if (d < min_dist) min_dist = d;
@@ -288,27 +275,13 @@ public:
                         + min_dist * (param.w_dist + in.M * param.w_dist_m);
     }
 
-    void update(const Input& in, const Param& param) {
-        calc_game_score(in);
-        calc_evaluated_score(in, param);
-    }
-
-    uint64_t calc_hash(const Input& in, const ZobristHash& hash) const {
+    uint64_t calc_hash(const ZobristHash& hash) const {
         uint64_t h = board_hash;
-
         h ^= hash.snake_len[snake_len];
-
         for (int i = 0; i < min(snake_len, hash.HASH_LEN); i++) {
             h ^= hash.snake_pos[i][snake_pos[i]];
         }
-
-        int streak = 0;
-        for (int i = 0; i < snake_len; i++) {
-            if (snake_color[i] != in.d[i]) break;
-            streak++;
-        }
         h ^= hash.streak[streak];
-
         return h;
     }
 };
@@ -352,7 +325,6 @@ vector<char> beam_search(const Input& in, const Param& param, const ZobristHash&
 
                 State next_state = state;
                 next_state.move(in, param, hash, d);
-
                 next_state.action_idx = ssize(actions);
                 actions.emplace_back(state.action_idx, d);
 
@@ -385,9 +357,6 @@ vector<char> beam_search(const Input& in, const Param& param, const ZobristHash&
     }
     ranges::reverse(best_actions);
 
-    // cerr << "actions size: " << ssize(actions) << "\n";
-    // cerr << "seen_hash size: " << ssize(seen_hash) << "\n";
-
     return best_actions;
 }
 
@@ -398,8 +367,6 @@ int main() {
     const Param param;
     const ZobristHash hash;
     const Input in = read_input();
-
-    State best_state(in, param, hash);
 
     constexpr int BEAM_WIDTH = 100;
     const vector<char> actions = beam_search(in, param, hash, time_keeper, BEAM_WIDTH);
