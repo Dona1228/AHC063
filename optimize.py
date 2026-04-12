@@ -13,10 +13,10 @@ def generate_params(trial: optuna.trial.Trial) -> dict[str, str]:
     params = {
         "STREAK": str(trial.suggest_float("streak", 1e2, 2e3)),
         "WRONG": str(trial.suggest_float("wrong", -1e3, -1e2)),
-        "TURN": str(trial.suggest_float("turn", -1e2, 0.0)),
-        "DIST": str(trial.suggest_float("dist", -1e2, 0.0)),
-        "STREAK_M": str(trial.suggest_float("streak_m", 1e3, 1e4)),
-        "WRONG_M": str(trial.suggest_float("wrong_m", -1e4, -1e3)),
+        "TURN": str(trial.suggest_float("turn", -2e2, 0.0)),
+        "DIST": str(trial.suggest_float("dist", -2e2, 0.0)),
+        "STREAK_M": str(trial.suggest_float("streak_m", 1e3, 2e4)),
+        "WRONG_M": str(trial.suggest_float("wrong_m", -2e4, -1e3)),
         "TURN_M": str(trial.suggest_float("turn_m", -2e2, 0.0)),
         "DIST_M": str(trial.suggest_float("dist_m", -2e2, 0.0))
     }
@@ -126,14 +126,14 @@ study = optuna.create_study(
 )
 
 study.enqueue_trial({
-    "streak": 862.08,
-    "wrong": -200.56,
-    "turn": -1.7436,
-    "dist": -34.268,
-    "streak_m": 1914.3,
-    "wrong_m": -1767.1,
-    "turn_m": -76.748,
-    "dist_m": -34.015
+    "streak": 1148.6310,
+    "wrong": -145.6768,
+    "turn": -68.9185,
+    "dist": -94.6722,
+    "streak_m": 9503.1988,
+    "wrong_m": -7898.7681,
+    "turn_m": -31.3595,
+    "dist_m": -195.7998
 })
 
 run_optimization(study)

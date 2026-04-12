@@ -2,30 +2,39 @@
 using namespace std;
 
 struct Param {
-    double w_streak;
-    double w_wrong;
-    double w_turn;
-    double w_dist;
-    double w_streak_m;
-    double w_wrong_m;
-    double w_turn_m;
-    double w_dist_m;
+    static constexpr double w_streak = 1148.6310;
+    static constexpr double w_wrong = -145.6768;
+    static constexpr double w_turn = -68.9185;
+    static constexpr double w_dist = -94.6722;
+    static constexpr double w_streak_m = 9503.1988;
+    static constexpr double w_wrong_m = -7898.7681;
+    static constexpr double w_turn_m = -31.3595;
+    static constexpr double w_dist_m = -195.7998;
 
-    Param() {
-        auto get_env = [](const char* name, double default_val) {
-            if (const char* p = getenv(name)) return stod(p);
-            return default_val;
-        };
+    // double w_streak;
+    // double w_wrong;
+    // double w_turn;
+    // double w_dist;
+    // double w_streak_m;
+    // double w_wrong_m;
+    // double w_turn_m;
+    // double w_dist_m;
 
-        w_streak = get_env("STREAK", 1148.6310);
-        w_wrong = get_env("WRONG", -145.6768);
-        w_turn = get_env("TURN", -68.9185);
-        w_dist = get_env("DIST", -94.6722);
-        w_streak_m = get_env("STREAK_M", 9503.1988);
-        w_wrong_m = get_env("WRONG_M", -7898.7681);
-        w_turn_m = get_env("TURN_M", -31.3595);
-        w_dist_m = get_env("DIST_M", -195.7998);
-    }
+    // Param() {
+    //     auto get_env = [](const char* name, double default_val) {
+    //         if (const char* p = getenv(name)) return stod(p);
+    //         return default_val;
+    //     };
+
+    //     w_streak = get_env("STREAK", 1148.6310);
+    //     w_wrong = get_env("WRONG", -145.6768);
+    //     w_turn = get_env("TURN", -68.9185);
+    //     w_dist = get_env("DIST", -94.6722);
+    //     w_streak_m = get_env("STREAK_M", 9503.1988);
+    //     w_wrong_m = get_env("WRONG_M", -7898.7681);
+    //     w_turn_m = get_env("TURN_M", -31.3595);
+    //     w_dist_m = get_env("DIST_M", -195.7998);
+    // }
 };
 
 unsigned int xorshift() {
@@ -380,11 +389,10 @@ vector<char> beam_search(const Input& in, const Param& param, const ZobristHash&
     // cerr << "seen_hash size: " << ssize(seen_hash) << "\n";
 
     return best_actions;
-
 }
 
 int main() {
-    constexpr int TIME_LIMIT = 1850;
+    constexpr int TIME_LIMIT = 1800;
     TimeKeeper time_keeper(TIME_LIMIT);
 
     const Param param;
