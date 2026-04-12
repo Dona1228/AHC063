@@ -46,7 +46,7 @@ def get_direction() -> str:
 
 # TODO: Set the timeout (seconds) or the number of trials
 def run_optimization(study: optuna.study.Study) -> None:
-    study.optimize(Objective(), timeout=3600)
+    study.optimize(Objective(), timeout=10800)
     # study.optimize(Objective(), n_trials=100)
 
 

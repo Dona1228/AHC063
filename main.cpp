@@ -2,39 +2,39 @@
 using namespace std;
 
 struct Param {
-    static constexpr double w_streak = 1148.6310;
-    static constexpr double w_wrong = -145.6768;
-    static constexpr double w_turn = -68.9185;
-    static constexpr double w_dist = -94.6722;
-    static constexpr double w_streak_m = 9503.1988;
-    static constexpr double w_wrong_m = -7898.7681;
-    static constexpr double w_turn_m = -31.3595;
-    static constexpr double w_dist_m = -195.7998;
+    // static constexpr double w_streak = 1931.4615;
+    // static constexpr double w_wrong = -697.1454;
+    // static constexpr double w_turn = -28.0261;
+    // static constexpr double w_dist = -49.0372;
+    // static constexpr double w_streak_m = 15520.9140;
+    // static constexpr double w_wrong_m = -15183.3802;
+    // static constexpr double w_turn_m = -163.5810;
+    // static constexpr double w_dist_m = -57.9808;
 
-    // double w_streak;
-    // double w_wrong;
-    // double w_turn;
-    // double w_dist;
-    // double w_streak_m;
-    // double w_wrong_m;
-    // double w_turn_m;
-    // double w_dist_m;
+    double w_streak;
+    double w_wrong;
+    double w_turn;
+    double w_dist;
+    double w_streak_m;
+    double w_wrong_m;
+    double w_turn_m;
+    double w_dist_m;
 
-    // Param() {
-    //     auto get_env = [](const char* name, double default_val) {
-    //         if (const char* p = getenv(name)) return stod(p);
-    //         return default_val;
-    //     };
+    Param() {
+        auto get_env = [](const char* name, double default_val) {
+            if (const char* p = getenv(name)) return stod(p);
+            return default_val;
+        };
 
-    //     w_streak = get_env("STREAK", 1148.6310);
-    //     w_wrong = get_env("WRONG", -145.6768);
-    //     w_turn = get_env("TURN", -68.9185);
-    //     w_dist = get_env("DIST", -94.6722);
-    //     w_streak_m = get_env("STREAK_M", 9503.1988);
-    //     w_wrong_m = get_env("WRONG_M", -7898.7681);
-    //     w_turn_m = get_env("TURN_M", -31.3595);
-    //     w_dist_m = get_env("DIST_M", -195.7998);
-    // }
+        w_streak = get_env("STREAK", 1931.4615);
+        w_wrong = get_env("WRONG", -697.1454);
+        w_turn = get_env("TURN", -28.0261);
+        w_dist = get_env("DIST", -49.0372);
+        w_streak_m = get_env("STREAK_M", 15520.9140);
+        w_wrong_m = get_env("WRONG_M", -15183.3802);
+        w_turn_m = get_env("TURN_M", -163.5810);
+        w_dist_m = get_env("DIST_M", -57.9808);
+    }
 };
 
 unsigned int xorshift() {
