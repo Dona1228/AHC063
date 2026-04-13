@@ -2,15 +2,6 @@
 using namespace std;
 
 struct Param {
-    // static constexpr double w_streak = 1313.5779;
-    // static constexpr double w_wrong = -893.7901;
-    // static constexpr double w_turn = -192.7953;
-    // static constexpr double w_dist = -73.5842;
-    // static constexpr double w_streak_m = 32460.6082;
-    // static constexpr double w_wrong_m = -16174.6179;
-    // static constexpr double w_turn_m = -183.4955;
-    // static constexpr double w_dist_m = -137.2489;
-
     double w_streak;
     double w_wrong;
     double w_turn;
@@ -286,26 +277,61 @@ public:
         game_score = turn + 10000 * (error + 2 * (in.M - snake_len));
         const int wrong = snake_len - streak;
         
-        // 目的の色までのマンハッタン距離を求める
-        int min_dist = in.N * in.N;
+        // --- 目的の色までの距離を求める (Lookahead機能追加) ---
+        double distance_penalty = 0.0;
+        
         if (streak < in.M) {
-            const int target_color = in.d[streak];
-            const int curr_pos = snake_pos[0];
+            const int target_color_1 = in.d[streak];
+            const int curr_x = snake_pos[0] / in.N;
+            const int curr_y = snake_pos[0] % in.N;
             
+            int min_dist_1 = in.N * in.N;
+            int best_target1_x = -1;
+            int best_target1_y = -1;
+            
+            // 目標1（次に必要な色）への最短距離を探す
             for (int x = 0; x < in.N; x++) {
                 for (int y = 0; y < in.N; y++) {
-                    if (board[x * in.N + y] == target_color) {
-                        const int d = abs(x - curr_pos / in.N) + abs(y - curr_pos % in.N);
-                        if (d < min_dist) min_dist = d;
+                    if (board[x * in.N + y] == target_color_1) {
+                        const int d = abs(x - curr_x) + abs(y - curr_y);
+                        if (d < min_dist_1) {
+                            min_dist_1 = d;
+                            best_target1_x = x;
+                            best_target1_y = y;
+                        }
                     }
                 }
             }
+            distance_penalty += min_dist_1;
+
+            // 目標2（その次に必要な色）への最短距離を考慮（Lookahead）
+            if (streak + 1 < in.M && best_target1_x != -1) {
+                const int target_color_2 = in.d[streak + 1];
+                int min_dist_2 = in.N * in.N;
+                
+                for (int x = 0; x < in.N; x++) {
+                    for (int y = 0; y < in.N; y++) {
+                        // 目標1として食べる予定のマスは除外
+                        if (x == best_target1_x && y == best_target1_y) continue;
+                        
+                        if (board[x * in.N + y] == target_color_2) {
+                            const int d = abs(x - best_target1_x) + abs(y - best_target1_y);
+                            if (d < min_dist_2) {
+                                min_dist_2 = d;
+                            }
+                        }
+                    }
+                }
+                // 目標2への距離は少し影響力を下げる（この係数0.5は要調整）
+                distance_penalty += min_dist_2 * 0.5; 
+            }
         }
 
+        // 評価値の計算（min_dist を distance_penalty に置き換え）
         evaluated_score = streak * (param.w_streak + in.M * param.w_streak_m)
                         + wrong * (param.w_wrong + in.M * param.w_wrong_m)
                         + turn * (param.w_turn + in.M * param.w_turn_m)
-                        + min_dist * (param.w_dist + in.M * param.w_dist_m);
+                        + distance_penalty * (param.w_dist + in.M * param.w_dist_m);
     }
 
     uint64_t calc_hash(const ZobristHash& hash) const {

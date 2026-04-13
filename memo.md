@@ -306,3 +306,7 @@
     - best params = {'streak': 1313.5779, 'wrong': -893.7901, 'turn': -192.7953, 'dist': -73.5842, 'streak_m': 32460.6082, 'wrong_m': -16174.6179, 'turn_m': -183.4955, 'dist_m': -137.2489}
     - best score  = 7376.1370
     - parameter importances = {'wrong_m': 0.8753, 'dist': 0.0483, 'dist_m': 0.0220, 'streak_m': 0.0162, 'wrong': 0.0129, 'turn': 0.0106, 'streak': 0.0104, 'turn_m': 0.0042}
+
+## 4/13
+- Geminiにビットボード高速化を書かせてみたけどダメそう
+- AIに投げるだけ投げてみる
