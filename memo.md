@@ -314,3 +314,9 @@
         - best params = {'streak': 3615.5403, 'wrong': -348.9116, 'turn': -11.9009, 'dist': -159.2805, 'streak_m': 33815.5102, 'wrong_m': -33298.8325, 'turn_m': -11.7797, 'dist_m': -52.0443}
         - best score  = 2335.8060
         - parameter importances = {'dist_m': 0.4609, 'wrong_m': 0.4015, 'streak_m': 0.0644, 'turn': 0.0262, 'dist': 0.0203, 'turn_m': 0.0136, 'wrong': 0.0070, 'streak': 0.0061}
+    - 3000ケースで回している途中経過
+        - Trial 8 finished with value: 7191.7643333333335 and parameters: {'streak': 816.8859324381757, 'wrong': -621.4941358507526, 'turn': -163.48763506118124, 'dist': -144.03194637484427, 'streak_m': 32050.913640872866, 'wrong_m': -21359.854973877733, 'turn_m': -96.38223405437589, 'dist_m': -51.102860915251256}. Best is trial 8 with value: 7191.7643333333335.
+    - 回し終わった
+        - best params = {'streak': 628.3613, 'wrong': -517.3913, 'turn': -45.4974, 'dist': -6.7540, 'streak_m': 17486.3402, 'wrong_m': -17147.2961, 'turn_m': -38.6634, 'dist_m': -57.7393}
+        - best score  = 4117.8190
+        - parameter importances = {'wrong_m': 0.6273, 'streak_m': 0.1890, 'dist_m': 0.0445, 'turn_m': 0.0404, 'wrong': 0.0360, 'streak': 0.0259, 'turn': 0.0244, 'dist': 0.0125}

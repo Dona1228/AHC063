@@ -126,14 +126,14 @@ study = optuna.create_study(
 )
 
 study.enqueue_trial({
-    "streak": 1313.5779,
-    "wrong": -893.7901,
-    "turn": -192.7953,
-    "dist": -73.5842,
-    "streak_m": 32460.6082,
-    "wrong_m": -16174.6179,
-    "turn_m": -183.4955,
-    "dist_m": -137.2489
+    "streak": 3615.5403,
+    "wrong": -348.9116,
+    "turn": -11.9009,
+    "dist": -159.2805,
+    "streak_m": 33815.5102,
+    "wrong_m": -33298.8325,
+    "turn_m": -11.7797,
+    "dist_m": -52.0443
 })
 
 run_optimization(study)

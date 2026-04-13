@@ -2,30 +2,30 @@
 using namespace std;
 
 struct Param {
-    double w_streak;
-    double w_wrong;
-    double w_turn;
-    double w_dist;
-    double w_streak_m;
-    double w_wrong_m;
-    double w_turn_m;
-    double w_dist_m;
+    static constexpr double w_streak = 628.3613;
+    static constexpr double w_wrong = -517.3913;
+    static constexpr double w_turn = -45.4974;
+    static constexpr double w_dist = -6.4570;
+    static constexpr double w_streak_m = 17486.3402;
+    static constexpr double w_wrong_m = -17147.2961;
+    static constexpr double w_turn_m = -38.6634;
+    static constexpr double w_dist_m = -57.7393;
 
-    Param() {
-        auto get_env = [](const char* name, double default_val) {
-            if (const char* p = getenv(name)) return stod(p);
-            return default_val;
-        };
+    // Param() {
+    //     auto get_env = [](const char* name, double default_val) {
+    //         if (const char* p = getenv(name)) return stod(p);
+    //         return default_val;
+    //     };
 
-        w_streak = get_env("STREAK", 3615.5403);
-        w_wrong = get_env("WRONG", -348.9116);
-        w_turn = get_env("TURN", -11.9009);
-        w_dist = get_env("DIST", -159.2805);
-        w_streak_m = get_env("STREAK_M", 33815.5102);
-        w_wrong_m = get_env("WRONG_M", -33298.8325);
-        w_turn_m = get_env("TURN_M", -11.7797);
-        w_dist_m = get_env("DIST_M", -52.0443);
-    }
+    //     w_streak = get_env("STREAK", 816.8859);
+    //     w_wrong = get_env("WRONG", -621.4941);
+    //     w_turn = get_env("TURN", -163.4876);
+    //     w_dist = get_env("DIST", -144.0319);
+    //     w_streak_m = get_env("STREAK_M", 32050.9136);
+    //     w_wrong_m = get_env("WRONG_M", -21359.8550);
+    //     w_turn_m = get_env("TURN_M", -96.3822);
+    //     w_dist_m = get_env("DIST_M", -51.1029);
+    // }
 };
 
 unsigned int xorshift() {
@@ -419,7 +419,7 @@ int choose_beam_width(const Input& in) {
 }
 
 int main() {
-    constexpr int TIME_LIMIT = 1900;
+    constexpr int TIME_LIMIT = 1950;
     TimeKeeper time_keeper(TIME_LIMIT);
 
     const Param param;
