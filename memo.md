@@ -310,3 +310,7 @@
 ## 4/13
 - Geminiにビットボード高速化を書かせてみたけどダメそう
 - AIに投げるだけ投げてみる
+    - 複数手先を見据えた距離評価
+        - best params = {'streak': 3615.5403, 'wrong': -348.9116, 'turn': -11.9009, 'dist': -159.2805, 'streak_m': 33815.5102, 'wrong_m': -33298.8325, 'turn_m': -11.7797, 'dist_m': -52.0443}
+        - best score  = 2335.8060
+        - parameter importances = {'dist_m': 0.4609, 'wrong_m': 0.4015, 'streak_m': 0.0644, 'turn': 0.0262, 'dist': 0.0203, 'turn_m': 0.0136, 'wrong': 0.0070, 'streak': 0.0061}
