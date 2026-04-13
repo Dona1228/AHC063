@@ -346,7 +346,7 @@ public:
 };
 
 vector<char> beam_search(const Input& in, const Param& param, const ZobristHash& hash, TimeKeeper& time_keeper, const int beam_width) {
-    constexpr array<char, 4> dir{'U', 'D', 'L', 'R'};
+    static constexpr array<char, 4> dir{'U', 'D', 'L', 'R'};
 
     vector<Node> actions;
     actions.reserve(2000000);
