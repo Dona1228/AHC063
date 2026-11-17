@@ -2,6 +2,10 @@
 
 [AtCoder Heuristic Contest 063](https://atcoder.jp/contests/ahc063) に参加した際のソースコードと考察メモをまとめたリポジトリです。
 
+## 参加記
+
+[AHC063 参加記（Zenn）](https://zenn.dev/donanta/articles/1f9b7bfc6d0e8c)
+
 ## 問題概要
 
 N×N のグリッド上でヘビを操作し、好みの色列 `d[0], d[1], ..., d[M-1]` の順番で餌を食べることを目指します。
