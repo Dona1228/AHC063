@@ -2,9 +2,7 @@
 
 [AtCoder Heuristic Contest 063](https://atcoder.jp/contests/ahc063) に参加した際のソースコードと考察メモをまとめたリポジトリです。
 
-## 参加記
-
-[AHC063 参加記（Zenn）](https://zenn.dev/donanta/articles/1f9b7bfc6d0e8c)
+参加記を書きました：[AHC063 参加記 182位](https://zenn.dev/donanta/articles/1f9b7bfc6d0e8c)
 
 ## 問題概要
 
